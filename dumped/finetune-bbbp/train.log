@@ -1,0 +1,464 @@
+2026-01-17 15:29:23,752 - root - INFO - Experiment folder: ./dumped\finetune-bbbp
+2026-01-17 15:29:23,753 - root - INFO - Run 1/3
+2026-01-17 15:29:23,755 - root - INFO - Loading data
+2026-01-17 15:29:23,755 - root - ERROR - Training failed: 'Namespace' object has no attribute 'features_path'
+Traceback (most recent call last):
+  File "train.py", line 132, in <module>
+    mean_auc_score, std_auc_score = run_stat(args, logger)
+  File "train.py", line 71, in run_stat
+    model_scores = run_training(args, prompt=False, logger=logger)
+  File "F:\KANO-main\chemprop\train\run_training.py", line 58, in run_training
+    data = get_data(path=args.data_path, args=args, logger=logger)
+  File "F:\KANO-main\chemprop\data\utils.py", line 109, in get_data
+    features_path = features_path if features_path is not None else args.features_path
+AttributeError: 'Namespace' object has no attribute 'features_path'
+2026-01-17 15:36:18,350 - root - INFO - Experiment folder: ./dumped\finetune-bbbp
+2026-01-17 15:36:18,350 - root - INFO - Run 1/3
+2026-01-17 15:36:18,352 - root - INFO - Loading data
+2026-01-17 15:36:18,352 - root - ERROR - Training failed: 'Namespace' object has no attribute 'max_data_size'
+Traceback (most recent call last):
+  File "train.py", line 132, in <module>
+    mean_auc_score, std_auc_score = run_stat(args, logger)
+  File "train.py", line 71, in run_stat
+    model_scores = run_training(args, prompt=False, logger=logger)
+  File "F:\KANO-main\chemprop\train\run_training.py", line 63, in run_training
+    logger=logger
+  File "F:\KANO-main\chemprop\data\utils.py", line 117, in get_data
+    max_data_size = max_data_size if max_data_size is not None else args.max_data_size
+AttributeError: 'Namespace' object has no attribute 'max_data_size'
+2026-01-17 15:58:53,670 - root - INFO - Experiment folder: ./dumped\finetune-bbbp
+2026-01-17 15:58:53,670 - root - INFO - Run 1/3
+2026-01-17 15:58:53,672 - root - INFO - Loading data
+2026-01-17 15:58:53,695 - root - ERROR - Training failed: 'Namespace' object has no attribute 'features_generator'
+Traceback (most recent call last):
+  File "train.py", line 132, in <module>
+    mean_auc_score, std_auc_score = run_stat(args, logger)
+  File "train.py", line 71, in run_stat
+    model_scores = run_training(args, prompt=False, logger=logger)
+  File "F:\KANO-main\chemprop\train\run_training.py", line 63, in run_training
+    logger=logger
+  File "F:\KANO-main\chemprop\data\utils.py", line 158, in get_data
+    ) for i, line in tqdm(enumerate(lines), total=len(lines))
+  File "F:\KANO-main\chemprop\data\utils.py", line 158, in <listcomp>
+    ) for i, line in tqdm(enumerate(lines), total=len(lines))
+  File "F:\KANO-main\chemprop\data\data.py", line 32, in __init__
+    self.features_generator = args.features_generator
+AttributeError: 'Namespace' object has no attribute 'features_generator'
+2026-01-17 16:04:40,706 - root - INFO - Experiment folder: ./dumped\finetune-bbbp
+2026-01-17 16:04:40,706 - root - INFO - Run 1/3
+2026-01-17 16:04:40,708 - root - INFO - Loading data
+2026-01-17 16:04:40,956 - root - INFO - Number of tasks = 1
+2026-01-17 16:04:40,957 - root - ERROR - Training failed: 'Namespace' object has no attribute 'folds_file'
+Traceback (most recent call last):
+  File "train.py", line 132, in <module>
+    mean_auc_score, std_auc_score = run_stat(args, logger)
+  File "train.py", line 71, in run_stat
+    model_scores = run_training(args, prompt=False, logger=logger)
+  File "F:\KANO-main\chemprop\train\run_training.py", line 106, in run_training
+    seed=getattr(args, 'seed', 0), args=args, logger=logger)
+  File "F:\KANO-main\chemprop\data\utils.py", line 247, in split_data
+    args.folds_file, args.val_fold_index, args.test_fold_index
+AttributeError: 'Namespace' object has no attribute 'folds_file'
+2026-01-17 16:06:08,320 - root - INFO - Experiment folder: ./dumped\finetune-bbbp
+2026-01-17 16:06:08,320 - root - INFO - Run 1/3
+2026-01-17 16:06:08,322 - root - INFO - Loading data
+2026-01-17 16:06:08,598 - root - INFO - Number of tasks = 1
+2026-01-17 16:06:08,598 - root - ERROR - Training failed: 'Namespace' object has no attribute 'folds_file'
+Traceback (most recent call last):
+  File "train.py", line 132, in <module>
+    mean_auc_score, std_auc_score = run_stat(args, logger)
+  File "train.py", line 71, in run_stat
+    model_scores = run_training(args, prompt=False, logger=logger)
+  File "F:\KANO-main\chemprop\train\run_training.py", line 106, in run_training
+    seed=getattr(args, 'seed', 0), args=args, logger=logger)
+  File "F:\KANO-main\chemprop\data\utils.py", line 247, in split_data
+    args.folds_file, args.val_fold_index, args.test_fold_index
+AttributeError: 'Namespace' object has no attribute 'folds_file'
+2026-01-17 16:10:35,447 - root - INFO - Experiment folder: ./dumped\finetune-bbbp
+2026-01-17 16:10:35,447 - root - INFO - Run 1/3
+2026-01-17 16:10:35,449 - root - INFO - Loading data
+2026-01-17 16:10:35,707 - root - INFO - Number of tasks = 1
+2026-01-17 16:10:35,707 - root - ERROR - Training failed: 'Namespace' object has no attribute 'folds_file'
+Traceback (most recent call last):
+  File "train.py", line 132, in <module>
+    mean_auc_score, std_auc_score = run_stat(args, logger)
+  File "train.py", line 71, in run_stat
+    model_scores = run_training(args, prompt=False, logger=logger)
+  File "F:\KANO-main\chemprop\train\run_training.py", line 106, in run_training
+    seed=getattr(args, 'seed', 0), args=args, logger=logger)
+  File "F:\KANO-main\chemprop\data\utils.py", line 247, in split_data
+    args.folds_file, args.val_fold_index, args.test_fold_index
+AttributeError: 'Namespace' object has no attribute 'folds_file'
+2026-01-17 16:16:02,842 - root - INFO - Experiment folder: ./dumped\finetune-bbbp
+2026-01-17 16:16:02,843 - root - INFO - Run 1/3
+2026-01-17 16:16:02,844 - root - INFO - Loading data
+2026-01-17 16:16:03,098 - root - INFO - Number of tasks = 1
+2026-01-17 16:16:03,487 - root - INFO - Epoch 0
+2026-01-17 16:16:03,489 - root - ERROR - Training failed: forward() takes from 2 to 3 positional arguments but 5 were given
+Traceback (most recent call last):
+  File "train.py", line 132, in <module>
+    mean_auc_score, std_auc_score = run_stat(args, logger)
+  File "train.py", line 71, in run_stat
+    model_scores = run_training(args, prompt=False, logger=logger)
+  File "F:\KANO-main\chemprop\train\run_training.py", line 240, in run_training
+    writer=writer
+  File "F:\KANO-main\chemprop\train\train.py", line 76, in train
+    preds = model(args.step, prompt, batch, features_batch)  # Use step from args (KANO functional prompt)
+  File "C:\ProgramData\Anaconda3\lib\site-packages\torch\nn\modules\module.py", line 1194, in _call_impl
+    return forward_call(*input, **kwargs)
+TypeError: forward() takes from 2 to 3 positional arguments but 5 were given
+2026-01-17 16:23:19,421 - root - INFO - Experiment folder: ./dumped\finetune-bbbp
+2026-01-17 16:23:19,421 - root - INFO - Run 1/3
+2026-01-17 16:23:19,423 - root - INFO - Loading data
+2026-01-17 16:23:19,674 - root - INFO - Number of tasks = 1
+2026-01-17 16:23:20,088 - root - INFO - Epoch 0
+2026-01-17 16:23:20,090 - root - ERROR - Training failed: forward() takes from 2 to 3 positional arguments but 5 were given
+Traceback (most recent call last):
+  File "train.py", line 132, in <module>
+    mean_auc_score, std_auc_score = run_stat(args, logger)
+  File "train.py", line 71, in run_stat
+    model_scores = run_training(args, prompt=False, logger=logger)
+  File "F:\KANO-main\chemprop\train\run_training.py", line 240, in run_training
+    writer=writer
+  File "F:\KANO-main\chemprop\train\train.py", line 76, in train
+    preds = model(args.step, prompt, batch, features_batch)  # Use step from args (KANO functional prompt)
+  File "C:\ProgramData\Anaconda3\lib\site-packages\torch\nn\modules\module.py", line 1194, in _call_impl
+    return forward_call(*input, **kwargs)
+TypeError: forward() takes from 2 to 3 positional arguments but 5 were given
+2026-01-17 16:28:11,642 - root - INFO - Experiment folder: ./dumped\finetune-bbbp
+2026-01-17 16:28:11,642 - root - INFO - Run 1/3
+2026-01-17 16:28:11,644 - root - INFO - Loading data
+2026-01-17 16:28:11,893 - root - INFO - Number of tasks = 1
+2026-01-17 16:28:12,306 - root - INFO - Epoch 0
+2026-01-17 16:28:12,306 - root - ERROR - Training failed: cannot assign 'bool' as child module 'prompt' (torch.nn.Module or None expected)
+Traceback (most recent call last):
+  File "train.py", line 132, in <module>
+    mean_auc_score, std_auc_score = run_stat(args, logger)
+  File "train.py", line 71, in run_stat
+    model_scores = run_training(args, prompt=False, logger=logger)
+  File "F:\KANO-main\chemprop\train\run_training.py", line 240, in run_training
+    writer=writer
+  File "F:\KANO-main\chemprop\train\train.py", line 31, in train
+    model.prompt = prompt  # 将prompt设为模型属性（若需生效）
+  File "C:\ProgramData\Anaconda3\lib\site-packages\torch\nn\modules\module.py", line 1306, in __setattr__
+    .format(torch.typename(value), name))
+TypeError: cannot assign 'bool' as child module 'prompt' (torch.nn.Module or None expected)
+2026-01-17 16:30:02,854 - root - INFO - Experiment folder: ./dumped\finetune-bbbp
+2026-01-17 16:30:02,855 - root - INFO - Run 1/3
+2026-01-17 16:30:02,856 - root - INFO - Loading data
+2026-01-17 16:30:03,108 - root - INFO - Number of tasks = 1
+2026-01-17 16:30:03,487 - root - INFO - Epoch 0
+2026-01-17 16:30:03,489 - root - ERROR - Training failed: forward() takes from 2 to 3 positional arguments but 5 were given
+Traceback (most recent call last):
+  File "train.py", line 132, in <module>
+    mean_auc_score, std_auc_score = run_stat(args, logger)
+  File "train.py", line 71, in run_stat
+    model_scores = run_training(args, prompt=False, logger=logger)
+  File "F:\KANO-main\chemprop\train\run_training.py", line 240, in run_training
+    writer=writer
+  File "F:\KANO-main\chemprop\train\train.py", line 76, in train
+    preds = model(step, prompt, batch, features_batch)  # prompt已作为参数传入，无需绑定模型属性
+  File "C:\ProgramData\Anaconda3\lib\site-packages\torch\nn\modules\module.py", line 1194, in _call_impl
+    return forward_call(*input, **kwargs)
+TypeError: forward() takes from 2 to 3 positional arguments but 5 were given
+2026-01-17 16:39:50,822 - root - INFO - Experiment folder: ./dumped\finetune-bbbp
+2026-01-17 16:39:50,822 - root - INFO - Run 1/3
+2026-01-17 16:39:50,824 - root - INFO - Loading data
+2026-01-17 16:39:51,076 - root - INFO - Number of tasks = 1
+2026-01-17 16:39:51,449 - root - INFO - Epoch 0
+2026-01-17 16:39:51,451 - root - ERROR - Training failed: forward() takes from 2 to 3 positional arguments but 5 were given
+Traceback (most recent call last):
+  File "train.py", line 132, in <module>
+    mean_auc_score, std_auc_score = run_stat(args, logger)
+  File "train.py", line 71, in run_stat
+    model_scores = run_training(args, prompt=False, logger=logger)
+  File "F:\KANO-main\chemprop\train\run_training.py", line 240, in run_training
+    writer=writer
+  File "F:\KANO-main\chemprop\train\train.py", line 76, in train
+    preds = model(step, prompt, batch, features_batch)  # prompt已作为参数传入，无需绑定模型属性
+  File "C:\ProgramData\Anaconda3\lib\site-packages\torch\nn\modules\module.py", line 1194, in _call_impl
+    return forward_call(*input, **kwargs)
+TypeError: forward() takes from 2 to 3 positional arguments but 5 were given
+2026-01-17 17:02:30,916 - root - INFO - Experiment folder: ./dumped\finetune-bbbp
+2026-01-17 17:02:30,916 - root - INFO - Run 1/3
+2026-01-17 17:02:30,918 - root - INFO - Loading data
+2026-01-17 17:02:31,163 - root - INFO - Number of tasks = 1
+2026-01-17 17:02:31,554 - root - INFO - Epoch 0
+2026-01-17 17:02:31,556 - root - ERROR - Training failed: forward() takes from 2 to 3 positional arguments but 5 were given
+Traceback (most recent call last):
+  File "train.py", line 132, in <module>
+    mean_auc_score, std_auc_score = run_stat(args, logger)
+  File "train.py", line 71, in run_stat
+    model_scores = run_training(args, prompt=False, logger=logger)
+  File "F:\KANO-main\chemprop\train\run_training.py", line 240, in run_training
+    writer=writer
+  File "F:\KANO-main\chemprop\train\train.py", line 76, in train
+    preds = model(step, prompt, batch, features_batch)  # prompt已作为参数传入，无需绑定模型属性
+  File "C:\ProgramData\Anaconda3\lib\site-packages\torch\nn\modules\module.py", line 1194, in _call_impl
+    return forward_call(*input, **kwargs)
+TypeError: forward() takes from 2 to 3 positional arguments but 5 were given
+2026-01-17 17:04:10,498 - root - INFO - Experiment folder: ./dumped\finetune-bbbp
+2026-01-17 17:04:10,498 - root - INFO - Run 1/3
+2026-01-17 17:04:10,500 - root - INFO - Loading data
+2026-01-17 17:04:10,746 - root - INFO - Number of tasks = 1
+2026-01-17 17:04:11,115 - root - INFO - Epoch 0
+2026-01-17 17:36:36,955 - root - INFO - Experiment folder: ./dumped\finetune-bbbp
+2026-01-17 17:36:36,956 - root - INFO - Run 1/1
+2026-01-17 17:36:36,956 - root - INFO - Loading data
+2026-01-17 17:36:37,221 - root - INFO - Number of tasks = 1
+2026-01-17 17:36:37,608 - root - INFO - Epoch 0
+2026-01-17 17:49:13,332 - root - ERROR - Training failed: forward() takes from 2 to 3 positional arguments but 5 were given
+Traceback (most recent call last):
+  File "train.py", line 132, in <module>
+    mean_auc_score, std_auc_score = run_stat(args, logger)
+  File "train.py", line 71, in run_stat
+    model_scores = run_training(args, prompt=False, logger=logger)
+  File "F:\KANO-main\chemprop\train\run_training.py", line 255, in run_training
+    logger=logger
+  File "F:\KANO-main\chemprop\train\evaluate.py", line 97, in evaluate
+    scaler=scaler
+  File "F:\KANO-main\chemprop\train\predict.py", line 42, in predict
+    batch_preds = model(step, prompt, batch, features_batch)
+  File "C:\ProgramData\Anaconda3\lib\site-packages\torch\nn\modules\module.py", line 1194, in _call_impl
+    return forward_call(*input, **kwargs)
+TypeError: forward() takes from 2 to 3 positional arguments but 5 were given
+2026-01-17 19:41:55,310 - root - INFO - Experiment folder: ./dumped\finetune-bbbp
+2026-01-17 19:41:55,310 - root - INFO - Run 1/1
+2026-01-17 19:41:55,310 - root - INFO - Loading data
+2026-01-17 19:41:55,578 - root - INFO - Number of tasks = 1
+2026-01-17 19:41:55,955 - root - INFO - Epoch 0
+2026-01-17 19:54:59,078 - root - INFO - Validation auc = 0.528261
+2026-01-17 19:54:59,083 - root - INFO - test auc = 0.599664
+2026-01-17 19:54:59,088 - root - INFO - Epoch 1
+2026-01-17 19:54:59,143 - root - INFO - Validation auc = 0.514010
+2026-01-17 19:54:59,143 - root - INFO - test auc = 0.381849
+2026-01-17 19:54:59,143 - root - INFO - Epoch 2
+2026-01-17 19:54:59,193 - root - INFO - Validation auc = 0.394444
+2026-01-17 19:54:59,198 - root - INFO - test auc = 0.429076
+2026-01-17 19:54:59,198 - root - INFO - Epoch 3
+2026-01-17 19:54:59,258 - root - INFO - Validation auc = 0.507246
+2026-01-17 19:54:59,258 - root - INFO - test auc = 0.443361
+2026-01-17 19:54:59,258 - root - INFO - Epoch 4
+2026-01-17 19:54:59,318 - root - INFO - Validation auc = 0.428019
+2026-01-17 19:54:59,323 - root - INFO - test auc = 0.375630
+2026-01-17 19:54:59,323 - root - INFO - Epoch 5
+2026-01-17 19:54:59,358 - root - INFO - Validation auc = 0.606280
+2026-01-17 19:54:59,358 - root - INFO - test auc = 0.514790
+2026-01-17 19:54:59,363 - root - INFO - Epoch 6
+2026-01-17 19:54:59,393 - root - INFO - Validation auc = 0.460145
+2026-01-17 19:54:59,398 - root - INFO - test auc = 0.481849
+2026-01-17 19:54:59,398 - root - INFO - Epoch 7
+2026-01-17 19:54:59,428 - root - INFO - Validation auc = 0.466184
+2026-01-17 19:54:59,433 - root - INFO - test auc = 0.532101
+2026-01-17 19:54:59,433 - root - INFO - Epoch 8
+2026-01-17 19:54:59,469 - root - INFO - Validation auc = 0.352657
+2026-01-17 19:54:59,469 - root - INFO - test auc = 0.505210
+2026-01-17 19:54:59,469 - root - INFO - Epoch 9
+2026-01-17 19:54:59,503 - root - INFO - Validation auc = 0.483092
+2026-01-17 19:54:59,508 - root - INFO - test auc = 0.397479
+2026-01-17 19:54:59,508 - root - INFO - Epoch 10
+2026-01-17 19:54:59,538 - root - INFO - Validation auc = 0.419565
+2026-01-17 19:54:59,543 - root - INFO - test auc = 0.529916
+2026-01-17 19:54:59,543 - root - INFO - Epoch 11
+2026-01-17 19:54:59,573 - root - INFO - Validation auc = 0.555556
+2026-01-17 19:54:59,578 - root - INFO - test auc = 0.565210
+2026-01-17 19:54:59,578 - root - INFO - Epoch 12
+2026-01-17 19:54:59,608 - root - INFO - Validation auc = 0.430676
+2026-01-17 19:54:59,608 - root - INFO - test auc = 0.563866
+2026-01-17 19:54:59,608 - root - INFO - Epoch 13
+2026-01-17 19:54:59,643 - root - INFO - Validation auc = 0.442512
+2026-01-17 19:54:59,643 - root - INFO - test auc = 0.515630
+2026-01-17 19:54:59,643 - root - INFO - Epoch 14
+2026-01-17 19:54:59,673 - root - INFO - Validation auc = 0.522464
+2026-01-17 19:54:59,678 - root - INFO - test auc = 0.500000
+2026-01-17 19:54:59,678 - root - INFO - Epoch 15
+2026-01-17 19:54:59,713 - root - INFO - Validation auc = 0.611594
+2026-01-17 19:54:59,713 - root - INFO - test auc = 0.505546
+2026-01-17 19:54:59,713 - root - INFO - Epoch 16
+2026-01-17 19:54:59,748 - root - INFO - Validation auc = 0.451449
+2026-01-17 19:54:59,748 - root - INFO - test auc = 0.531765
+2026-01-17 19:54:59,748 - root - INFO - Epoch 17
+2026-01-17 19:54:59,783 - root - INFO - Validation auc = 0.357729
+2026-01-17 19:54:59,783 - root - INFO - test auc = 0.492101
+2026-01-17 19:54:59,783 - root - INFO - Epoch 18
+2026-01-17 19:54:59,818 - root - INFO - Validation auc = 0.540580
+2026-01-17 19:54:59,818 - root - INFO - test auc = 0.625378
+2026-01-17 19:54:59,818 - root - INFO - Epoch 19
+2026-01-17 19:54:59,853 - root - INFO - Validation auc = 0.383575
+2026-01-17 19:54:59,853 - root - INFO - test auc = 0.491092
+2026-01-17 19:54:59,853 - root - INFO - Model 0 best validation auc = 0.611594 on epoch 15
+2026-01-17 19:54:59,858 - root - ERROR - Training failed: 'NoneType' object has no attribute 'num_tasks'
+Traceback (most recent call last):
+  File "train.py", line 132, in <module>
+    mean_auc_score, std_auc_score = run_stat(args, logger)
+  File "train.py", line 71, in run_stat
+    model_scores = run_training(args, prompt=False, logger=logger)
+  File "F:\KANO-main\chemprop\train\run_training.py", line 298, in run_training
+    model = load_checkpoint(os.path.join(save_dir, 'model.pt'), cuda=getattr(args, 'cuda', True), logger=logger)
+  File "F:\KANO-main\chemprop\utils.py", line 186, in load_checkpoint
+    model = build_model(current_args, encoder_name=getattr(current_args, 'encoder_name', 'CMPNN'))
+  File "train.py", line 61, in custom_build_model
+    base_model = original_build(args_build, encoder_name)
+  File "F:\KANO-main\chemprop\models\build.py", line 62, in build_model
+    model = KANOModel(args)
+  File "F:\KANO-main\chemprop\models\build.py", line 45, in __init__
+    self.task_head = nn.Linear(getattr(args, 'hidden_size', 300), args.num_tasks)
+AttributeError: 'NoneType' object has no attribute 'num_tasks'
+2026-01-17 19:59:33,038 - root - INFO - Experiment folder: ./dumped\finetune-bbbp
+2026-01-17 19:59:33,038 - root - INFO - Run 1/1
+2026-01-17 19:59:33,038 - root - INFO - Loading data
+2026-01-17 19:59:33,319 - root - INFO - Number of tasks = 1
+2026-01-17 19:59:33,759 - root - INFO - Epoch 0
+2026-01-17 20:11:59,130 - root - INFO - Validation auc = 0.528261
+2026-01-17 20:11:59,130 - root - INFO - test auc = 0.599664
+2026-01-17 20:11:59,135 - root - INFO - Epoch 1
+2026-01-17 20:11:59,181 - root - INFO - Validation auc = 0.514010
+2026-01-17 20:11:59,186 - root - INFO - test auc = 0.381849
+2026-01-17 20:11:59,186 - root - INFO - Epoch 2
+2026-01-17 20:11:59,231 - root - INFO - Validation auc = 0.394444
+2026-01-17 20:11:59,236 - root - INFO - test auc = 0.429076
+2026-01-17 20:11:59,236 - root - INFO - Epoch 3
+2026-01-17 20:11:59,281 - root - INFO - Validation auc = 0.507246
+2026-01-17 20:11:59,286 - root - INFO - test auc = 0.443361
+2026-01-17 20:11:59,286 - root - INFO - Epoch 4
+2026-01-17 20:11:59,321 - root - INFO - Validation auc = 0.428019
+2026-01-17 20:11:59,321 - root - INFO - test auc = 0.375630
+2026-01-17 20:11:59,321 - root - INFO - Epoch 5
+2026-01-17 20:11:59,366 - root - INFO - Validation auc = 0.606280
+2026-01-17 20:11:59,366 - root - INFO - test auc = 0.514790
+2026-01-17 20:11:59,366 - root - INFO - Epoch 6
+2026-01-17 20:11:59,411 - root - INFO - Validation auc = 0.460145
+2026-01-17 20:11:59,411 - root - INFO - test auc = 0.481849
+2026-01-17 20:11:59,411 - root - INFO - Epoch 7
+2026-01-17 20:11:59,451 - root - INFO - Validation auc = 0.466184
+2026-01-17 20:11:59,451 - root - INFO - test auc = 0.532101
+2026-01-17 20:11:59,451 - root - INFO - Epoch 8
+2026-01-17 20:11:59,486 - root - INFO - Validation auc = 0.352657
+2026-01-17 20:11:59,491 - root - INFO - test auc = 0.505210
+2026-01-17 20:11:59,491 - root - INFO - Epoch 9
+2026-01-17 20:11:59,526 - root - INFO - Validation auc = 0.483092
+2026-01-17 20:11:59,526 - root - INFO - test auc = 0.397479
+2026-01-17 20:11:59,526 - root - INFO - Epoch 10
+2026-01-17 20:11:59,556 - root - INFO - Validation auc = 0.419565
+2026-01-17 20:11:59,561 - root - INFO - test auc = 0.529916
+2026-01-17 20:11:59,561 - root - INFO - Epoch 11
+2026-01-17 20:11:59,596 - root - INFO - Validation auc = 0.555556
+2026-01-17 20:11:59,596 - root - INFO - test auc = 0.565210
+2026-01-17 20:11:59,596 - root - INFO - Epoch 12
+2026-01-17 20:11:59,631 - root - INFO - Validation auc = 0.430676
+2026-01-17 20:11:59,631 - root - INFO - test auc = 0.563866
+2026-01-17 20:11:59,631 - root - INFO - Epoch 13
+2026-01-17 20:11:59,661 - root - INFO - Validation auc = 0.442512
+2026-01-17 20:11:59,666 - root - INFO - test auc = 0.515630
+2026-01-17 20:11:59,666 - root - INFO - Epoch 14
+2026-01-17 20:11:59,696 - root - INFO - Validation auc = 0.522464
+2026-01-17 20:11:59,701 - root - INFO - test auc = 0.500000
+2026-01-17 20:11:59,701 - root - INFO - Epoch 15
+2026-01-17 20:11:59,731 - root - INFO - Validation auc = 0.611594
+2026-01-17 20:11:59,736 - root - INFO - test auc = 0.505546
+2026-01-17 20:11:59,736 - root - INFO - Epoch 16
+2026-01-17 20:11:59,771 - root - INFO - Validation auc = 0.451449
+2026-01-17 20:11:59,771 - root - INFO - test auc = 0.531765
+2026-01-17 20:11:59,771 - root - INFO - Epoch 17
+2026-01-17 20:11:59,806 - root - INFO - Validation auc = 0.357729
+2026-01-17 20:11:59,806 - root - INFO - test auc = 0.492101
+2026-01-17 20:11:59,806 - root - INFO - Epoch 18
+2026-01-17 20:11:59,841 - root - INFO - Validation auc = 0.540580
+2026-01-17 20:11:59,841 - root - INFO - test auc = 0.625378
+2026-01-17 20:11:59,841 - root - INFO - Epoch 19
+2026-01-17 20:11:59,877 - root - INFO - Validation auc = 0.383575
+2026-01-17 20:11:59,877 - root - INFO - test auc = 0.491092
+2026-01-17 20:11:59,877 - root - INFO - Model 0 best validation auc = 0.611594 on epoch 15
+2026-01-17 20:11:59,877 - root - INFO - Loading checkpoint from ./dumped\finetune-bbbp\run_0\model_0\model.pt
+2026-01-17 20:11:59,877 - root - ERROR - Training failed: 'dict' object has no attribute 'num_tasks'
+Traceback (most recent call last):
+  File "train.py", line 132, in <module>
+    mean_auc_score, std_auc_score = run_stat(args, logger)
+  File "train.py", line 71, in run_stat
+    model_scores = run_training(args, prompt=False, logger=logger)
+  File "F:\KANO-main\chemprop\train\run_training.py", line 302, in run_training
+    current_running_args=args  # 传入当前运行的args作为兜底
+  File "F:\KANO-main\chemprop\utils.py", line 200, in load_checkpoint
+    model = build_model(current_args, encoder_name=encoder_name)
+  File "F:\KANO-main\chemprop\models\build.py", line 62, in build_model
+    model = KANOModel(args)
+  File "F:\KANO-main\chemprop\models\build.py", line 45, in __init__
+    self.task_head = nn.Linear(getattr(args, 'hidden_size', 300), args.num_tasks)
+AttributeError: 'dict' object has no attribute 'num_tasks'
+2026-01-17 20:16:16,971 - root - INFO - Experiment folder: ./dumped\finetune-bbbp
+2026-01-17 20:16:16,971 - root - INFO - Run 1/1
+2026-01-17 20:16:16,971 - root - INFO - Loading data
+2026-01-17 20:16:17,230 - root - INFO - Number of tasks = 1
+2026-01-17 20:16:17,606 - root - INFO - Epoch 0
+2026-01-17 20:27:58,543 - root - INFO - Validation auc = 0.528261
+2026-01-17 20:27:58,543 - root - INFO - test auc = 0.599664
+2026-01-17 20:27:58,548 - root - INFO - Epoch 1
+2026-01-17 20:27:58,587 - root - INFO - Validation auc = 0.514010
+2026-01-17 20:27:58,587 - root - INFO - test auc = 0.381849
+2026-01-17 20:27:58,587 - root - INFO - Epoch 2
+2026-01-17 20:27:58,624 - root - INFO - Validation auc = 0.394444
+2026-01-17 20:27:58,629 - root - INFO - test auc = 0.429076
+2026-01-17 20:27:58,629 - root - INFO - Epoch 3
+2026-01-17 20:27:58,667 - root - INFO - Validation auc = 0.507246
+2026-01-17 20:27:58,668 - root - INFO - test auc = 0.443361
+2026-01-17 20:27:58,668 - root - INFO - Epoch 4
+2026-01-17 20:27:58,706 - root - INFO - Validation auc = 0.428019
+2026-01-17 20:27:58,708 - root - INFO - test auc = 0.375630
+2026-01-17 20:27:58,708 - root - INFO - Epoch 5
+2026-01-17 20:27:58,733 - root - INFO - Validation auc = 0.606280
+2026-01-17 20:27:58,733 - root - INFO - test auc = 0.514790
+2026-01-17 20:27:58,733 - root - INFO - Epoch 6
+2026-01-17 20:27:58,763 - root - INFO - Validation auc = 0.460145
+2026-01-17 20:27:58,763 - root - INFO - test auc = 0.481849
+2026-01-17 20:27:58,763 - root - INFO - Epoch 7
+2026-01-17 20:27:58,810 - root - INFO - Validation auc = 0.466184
+2026-01-17 20:27:58,810 - root - INFO - test auc = 0.532101
+2026-01-17 20:27:58,810 - root - INFO - Epoch 8
+2026-01-17 20:27:58,842 - root - INFO - Validation auc = 0.352657
+2026-01-17 20:27:58,842 - root - INFO - test auc = 0.505210
+2026-01-17 20:27:58,842 - root - INFO - Epoch 9
+2026-01-17 20:27:58,873 - root - INFO - Validation auc = 0.483092
+2026-01-17 20:27:58,873 - root - INFO - test auc = 0.397479
+2026-01-17 20:27:58,873 - root - INFO - Epoch 10
+2026-01-17 20:27:58,905 - root - INFO - Validation auc = 0.419565
+2026-01-17 20:27:58,905 - root - INFO - test auc = 0.529916
+2026-01-17 20:27:58,905 - root - INFO - Epoch 11
+2026-01-17 20:27:58,936 - root - INFO - Validation auc = 0.555556
+2026-01-17 20:27:58,936 - root - INFO - test auc = 0.565210
+2026-01-17 20:27:58,936 - root - INFO - Epoch 12
+2026-01-17 20:27:58,968 - root - INFO - Validation auc = 0.430676
+2026-01-17 20:27:58,968 - root - INFO - test auc = 0.563866
+2026-01-17 20:27:58,968 - root - INFO - Epoch 13
+2026-01-17 20:27:59,014 - root - INFO - Validation auc = 0.442512
+2026-01-17 20:27:59,014 - root - INFO - test auc = 0.515630
+2026-01-17 20:27:59,014 - root - INFO - Epoch 14
+2026-01-17 20:27:59,046 - root - INFO - Validation auc = 0.522464
+2026-01-17 20:27:59,046 - root - INFO - test auc = 0.500000
+2026-01-17 20:27:59,046 - root - INFO - Epoch 15
+2026-01-17 20:27:59,077 - root - INFO - Validation auc = 0.611594
+2026-01-17 20:27:59,077 - root - INFO - test auc = 0.505546
+2026-01-17 20:27:59,077 - root - INFO - Epoch 16
+2026-01-17 20:27:59,109 - root - INFO - Validation auc = 0.451449
+2026-01-17 20:27:59,109 - root - INFO - test auc = 0.531765
+2026-01-17 20:27:59,109 - root - INFO - Epoch 17
+2026-01-17 20:27:59,140 - root - INFO - Validation auc = 0.357729
+2026-01-17 20:27:59,156 - root - INFO - test auc = 0.492101
+2026-01-17 20:27:59,156 - root - INFO - Epoch 18
+2026-01-17 20:27:59,187 - root - INFO - Validation auc = 0.540580
+2026-01-17 20:27:59,187 - root - INFO - test auc = 0.625378
+2026-01-17 20:27:59,187 - root - INFO - Epoch 19
+2026-01-17 20:27:59,219 - root - INFO - Validation auc = 0.383575
+2026-01-17 20:27:59,219 - root - INFO - test auc = 0.491092
+2026-01-17 20:27:59,219 - root - INFO - Model 0 best validation auc = 0.611594 on epoch 15
+2026-01-17 20:27:59,219 - root - INFO - Loading checkpoint from ./dumped\finetune-bbbp\run_0\model_0\model.pt
+2026-01-17 20:27:59,219 - root - ERROR - Training failed: 'state_dict'
+Traceback (most recent call last):
+  File "train.py", line 132, in <module>
+    mean_auc_score, std_auc_score = run_stat(args, logger)
+  File "train.py", line 71, in run_stat
+    model_scores = run_training(args, prompt=False, logger=logger)
+  File "F:\KANO-main\chemprop\train\run_training.py", line 302, in run_training
+    current_running_args=args  # 传入当前运行的args作为兜底
+  File "F:\KANO-main\chemprop\utils.py", line 203, in load_checkpoint
+    model.load_state_dict(checkpoint['state_dict'])
+KeyError: 'state_dict'

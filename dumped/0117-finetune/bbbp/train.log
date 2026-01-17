@@ -1,0 +1,990 @@
+INFO - 01/17/26 13:04:46 - 0:00:00 - ============ Initialized logger ============
+INFO - 01/17/26 13:04:46 - 0:00:00 - batch_size: 256
+                                     checkpoint_dir: None
+                                     checkpoint_path: .\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl
+                                     command: python train.py --data_path '.\data\bbbp.csv' --dataset_type classification --metric auc --epochs 100 --num_runs 3 --gpu 0 --batch_size 256 --seed 51 --init_lr '1e-4' --split_type scaffold_balanced --step functional_prompt --exp_name finetune --exp_id bbbp --checkpoint_path '.\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl' --exp_id "bbbp"
+                                     config_path: None
+                                     crossval_index_dir: None
+                                     crossval_index_file: None
+                                     data_path: .\data\bbbp.csv
+                                     dataset_type: classification
+                                     dump_path: ./dumped
+                                     epochs: 100
+                                     exp_id: bbbp
+                                     exp_name: finetune
+                                     features_generator: None
+                                     features_only: False
+                                     features_path: None
+                                     final_lr: 0.0001
+                                     folds_file: None
+                                     gpu: 0
+                                     init_lr: 0.0001
+                                     log_frequency: 10
+                                     max_data_size: None
+                                     max_lr: 0.001
+                                     metric: auc
+                                     multiclass_num_classes: 3
+                                     no_cache: False
+                                     no_cuda: False
+                                     no_features_scaling: False
+                                     num_runs: 3
+                                     preds_path: test_pred.csv
+                                     quiet: False
+                                     save_dir: ./ckpt
+                                     save_smiles_splits: False
+                                     seed: 51
+                                     separate_test_features_path: None
+                                     separate_test_path: None
+                                     separate_val_features_path: None
+                                     separate_val_path: None
+                                     show_individual_scores: False
+                                     split_sizes: [0.8, 0.1, 0.1]
+                                     split_type: scaffold_balanced
+                                     step: functional_prompt
+                                     temperature: 0.1
+                                     test: False
+                                     test_fold_index: None
+                                     test_path: ../input/test.csv
+                                     use_compound_names: False
+                                     val_fold_index: None
+                                     warmup_epochs: 2.0
+INFO - 01/17/26 13:07:17 - 0:00:00 - ============ Initialized logger ============
+INFO - 01/17/26 13:07:17 - 0:00:00 - batch_size: 256
+                                     checkpoint_dir: None
+                                     checkpoint_path: .\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl
+                                     command: python train.py --data_path '.\data\bbbp.csv' --dataset_type classification --metric auc --epochs 100 --num_runs 3 --gpu 0 --batch_size 256 --seed 51 --init_lr '1e-4' --split_type scaffold_balanced --step functional_prompt --exp_name finetune --exp_id bbbp --checkpoint_path '.\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl' --exp_id "bbbp"
+                                     config_path: None
+                                     crossval_index_dir: None
+                                     crossval_index_file: None
+                                     data_path: .\data\bbbp.csv
+                                     dataset_type: classification
+                                     dump_path: ./dumped
+                                     epochs: 100
+                                     exp_id: bbbp
+                                     exp_name: finetune
+                                     features_generator: None
+                                     features_only: False
+                                     features_path: None
+                                     final_lr: 0.0001
+                                     folds_file: None
+                                     gpu: 0
+                                     init_lr: 0.0001
+                                     log_frequency: 10
+                                     max_data_size: None
+                                     max_lr: 0.001
+                                     metric: auc
+                                     multiclass_num_classes: 3
+                                     no_cache: False
+                                     no_cuda: False
+                                     no_features_scaling: False
+                                     num_runs: 3
+                                     preds_path: test_pred.csv
+                                     quiet: False
+                                     save_dir: ./ckpt
+                                     save_smiles_splits: False
+                                     seed: 51
+                                     separate_test_features_path: None
+                                     separate_test_path: None
+                                     separate_val_features_path: None
+                                     separate_val_path: None
+                                     show_individual_scores: False
+                                     split_sizes: [0.8, 0.1, 0.1]
+                                     split_type: scaffold_balanced
+                                     step: functional_prompt
+                                     temperature: 0.1
+                                     test: False
+                                     test_fold_index: None
+                                     test_path: ../input/test.csv
+                                     use_compound_names: False
+                                     val_fold_index: None
+                                     warmup_epochs: 2.0
+INFO - 01/17/26 13:08:33 - 0:00:00 - ============ Initialized logger ============
+INFO - 01/17/26 13:08:33 - 0:00:00 - batch_size: 256
+                                     checkpoint_dir: None
+                                     checkpoint_path: .\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl
+                                     command: python train.py --data_path '.\data\bbbp.csv' --dataset_type classification --metric auc --epochs 100 --num_runs 3 --gpu 0 --batch_size 256 --seed 51 --init_lr '1e-4' --split_type scaffold_balanced --step functional_prompt --exp_name finetune --exp_id bbbp --checkpoint_path '.\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl' --exp_id "bbbp"
+                                     config_path: None
+                                     crossval_index_dir: None
+                                     crossval_index_file: None
+                                     data_path: .\data\bbbp.csv
+                                     dataset_type: classification
+                                     dump_path: ./dumped
+                                     epochs: 100
+                                     exp_id: bbbp
+                                     exp_name: finetune
+                                     features_generator: None
+                                     features_only: False
+                                     features_path: None
+                                     final_lr: 0.0001
+                                     folds_file: None
+                                     gpu: 0
+                                     init_lr: 0.0001
+                                     log_frequency: 10
+                                     max_data_size: None
+                                     max_lr: 0.001
+                                     metric: auc
+                                     multiclass_num_classes: 3
+                                     no_cache: False
+                                     no_cuda: False
+                                     no_features_scaling: False
+                                     num_runs: 3
+                                     preds_path: test_pred.csv
+                                     quiet: False
+                                     save_dir: ./ckpt
+                                     save_smiles_splits: False
+                                     seed: 51
+                                     separate_test_features_path: None
+                                     separate_test_path: None
+                                     separate_val_features_path: None
+                                     separate_val_path: None
+                                     show_individual_scores: False
+                                     split_sizes: [0.8, 0.1, 0.1]
+                                     split_type: scaffold_balanced
+                                     step: functional_prompt
+                                     temperature: 0.1
+                                     test: False
+                                     test_fold_index: None
+                                     test_path: ../input/test.csv
+                                     use_compound_names: False
+                                     val_fold_index: None
+                                     warmup_epochs: 2.0
+INFO - 01/17/26 13:08:33 - 0:00:00 - ========================
+                                     # Git Version: unknown #
+                                     ========================
+INFO - 01/17/26 13:08:33 - 0:00:00 - The experiment will be stored in ./dumped\0117-finetune\bbbp
+                                     
+INFO - 01/17/26 13:08:33 - 0:00:00 - Running command: python train.py --data_path '.\data\bbbp.csv' --dataset_type classification --metric auc --epochs 100 --num_runs 3 --gpu 0 --batch_size 256 --seed 51 --init_lr '1e-4' --split_type scaffold_balanced --step functional_prompt --exp_name finetune --exp_id bbbp --checkpoint_path '.\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl'
+
+INFO - 01/17/26 13:10:43 - 0:00:00 - ============ Initialized logger ============
+INFO - 01/17/26 13:10:43 - 0:00:00 - batch_size: 256
+                                     checkpoint_dir: None
+                                     checkpoint_path: .\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl
+                                     command: python train.py --data_path '.\data\bbbp.csv' --dataset_type classification --metric auc --epochs 100 --num_runs 3 --gpu 0 --batch_size 256 --seed 51 --init_lr '1e-4' --split_type scaffold_balanced --step functional_prompt --exp_name finetune --exp_id bbbp --checkpoint_path '.\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl' --exp_id "bbbp"
+                                     config_path: None
+                                     crossval_index_dir: None
+                                     crossval_index_file: None
+                                     data_path: .\data\bbbp.csv
+                                     dataset_type: classification
+                                     dump_path: ./dumped
+                                     epochs: 100
+                                     exp_id: bbbp
+                                     exp_name: finetune
+                                     features_generator: None
+                                     features_only: False
+                                     features_path: None
+                                     final_lr: 0.0001
+                                     folds_file: None
+                                     gpu: 0
+                                     init_lr: 0.0001
+                                     log_frequency: 10
+                                     max_data_size: None
+                                     max_lr: 0.001
+                                     metric: auc
+                                     multiclass_num_classes: 3
+                                     no_cache: False
+                                     no_cuda: False
+                                     no_features_scaling: False
+                                     num_runs: 3
+                                     preds_path: test_pred.csv
+                                     quiet: False
+                                     save_dir: ./ckpt
+                                     save_smiles_splits: False
+                                     seed: 51
+                                     separate_test_features_path: None
+                                     separate_test_path: None
+                                     separate_val_features_path: None
+                                     separate_val_path: None
+                                     show_individual_scores: False
+                                     split_sizes: [0.8, 0.1, 0.1]
+                                     split_type: scaffold_balanced
+                                     step: functional_prompt
+                                     temperature: 0.1
+                                     test: False
+                                     test_fold_index: None
+                                     test_path: ../input/test.csv
+                                     use_compound_names: False
+                                     use_kapt_prompt: False
+                                     val_fold_index: None
+                                     warmup_epochs: 2.0
+INFO - 01/17/26 13:10:43 - 0:00:00 - ========================
+                                     # Git Version: unknown #
+                                     ========================
+INFO - 01/17/26 13:10:43 - 0:00:00 - The experiment will be stored in ./dumped\0117-finetune\bbbp
+                                     
+INFO - 01/17/26 13:10:43 - 0:00:00 - Running command: python train.py --data_path '.\data\bbbp.csv' --dataset_type classification --metric auc --epochs 100 --num_runs 3 --gpu 0 --batch_size 256 --seed 51 --init_lr '1e-4' --split_type scaffold_balanced --step functional_prompt --exp_name finetune --exp_id bbbp --checkpoint_path '.\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl'
+
+INFO - 01/17/26 13:10:43 - 0:00:00 - Run 0
+INFO - 01/17/26 14:10:33 - 0:00:00 - ============ Initialized logger ============
+INFO - 01/17/26 14:10:33 - 0:00:00 - batch_size: 256
+                                     checkpoint_dir: None
+                                     checkpoint_path: .\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl
+                                     command: python train.py --data_path '.\data\bbbp.csv' --dataset_type classification --metric auc --epochs 100 --num_runs 3 --gpu 0 --batch_size 256 --seed 51 --init_lr '1e-4' --split_type scaffold_balanced --step functional_prompt --exp_name finetune --exp_id bbbp --checkpoint_path '.\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl' --exp_id "bbbp"
+                                     config_path: None
+                                     crossval_index_dir: None
+                                     crossval_index_file: None
+                                     data_path: .\data\bbbp.csv
+                                     dataset_type: classification
+                                     dump_path: ./dumped
+                                     epochs: 100
+                                     exp_id: bbbp
+                                     exp_name: finetune
+                                     features_generator: None
+                                     features_only: False
+                                     features_path: None
+                                     final_lr: 0.0001
+                                     folds_file: None
+                                     gpu: 0
+                                     init_lr: 0.0001
+                                     log_frequency: 10
+                                     max_data_size: None
+                                     max_lr: 0.001
+                                     metric: auc
+                                     multiclass_num_classes: 3
+                                     no_cache: False
+                                     no_cuda: False
+                                     no_features_scaling: False
+                                     num_runs: 3
+                                     preds_path: test_pred.csv
+                                     quiet: False
+                                     save_dir: ./ckpt
+                                     save_smiles_splits: False
+                                     seed: 51
+                                     separate_test_features_path: None
+                                     separate_test_path: None
+                                     separate_val_features_path: None
+                                     separate_val_path: None
+                                     show_individual_scores: False
+                                     split_sizes: [0.8, 0.1, 0.1]
+                                     split_type: scaffold_balanced
+                                     step: functional_prompt
+                                     temperature: 0.1
+                                     test: False
+                                     test_fold_index: None
+                                     test_path: ../input/test.csv
+                                     use_compound_names: False
+                                     use_kapt_prompt: False
+                                     val_fold_index: None
+                                     warmup_epochs: 2.0
+INFO - 01/17/26 14:10:34 - 0:00:01 - ========================
+                                     # Git Version: unknown #
+                                     ========================
+INFO - 01/17/26 14:10:34 - 0:00:01 - The experiment will be stored in ./dumped\0117-finetune\bbbp
+                                     
+INFO - 01/17/26 14:10:34 - 0:00:01 - Running command: python train.py --data_path '.\data\bbbp.csv' --dataset_type classification --metric auc --epochs 100 --num_runs 3 --gpu 0 --batch_size 256 --seed 51 --init_lr '1e-4' --split_type scaffold_balanced --step functional_prompt --exp_name finetune --exp_id bbbp --checkpoint_path '.\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl'
+
+INFO - 01/17/26 14:10:34 - 0:00:01 - Run 0
+INFO - 01/17/26 14:43:36 - 0:00:00 - ============ Initialized logger ============
+INFO - 01/17/26 14:43:36 - 0:00:00 - batch_size: 256
+                                     checkpoint_dir: None
+                                     checkpoint_path: .\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl
+                                     command: python train.py --data_path '.\data\bbbp.csv' --dataset_type classification --metric auc --epochs 100 --num_runs 3 --gpu 0 --batch_size 256 --seed 51 --init_lr '1e-4' --split_type scaffold_balanced --step functional_prompt --exp_name finetune --exp_id bbbp --checkpoint_path '.\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl' --exp_id "bbbp"
+                                     config_path: None
+                                     crossval_index_dir: None
+                                     crossval_index_file: None
+                                     data_path: .\data\bbbp.csv
+                                     dataset_type: classification
+                                     dump_path: ./dumped
+                                     epochs: 100
+                                     exp_id: bbbp
+                                     exp_name: finetune
+                                     features_generator: None
+                                     features_only: False
+                                     features_path: None
+                                     final_lr: 0.0001
+                                     folds_file: None
+                                     gpu: 0
+                                     init_lr: 0.0001
+                                     log_frequency: 10
+                                     max_data_size: None
+                                     max_lr: 0.001
+                                     metric: auc
+                                     multiclass_num_classes: 3
+                                     no_cache: False
+                                     no_cuda: False
+                                     no_features_scaling: False
+                                     num_runs: 3
+                                     preds_path: test_pred.csv
+                                     quiet: False
+                                     save_dir: ./ckpt
+                                     save_smiles_splits: False
+                                     seed: 51
+                                     separate_test_features_path: None
+                                     separate_test_path: None
+                                     separate_val_features_path: None
+                                     separate_val_path: None
+                                     show_individual_scores: False
+                                     split_sizes: [0.8, 0.1, 0.1]
+                                     split_type: scaffold_balanced
+                                     step: functional_prompt
+                                     temperature: 0.1
+                                     test: False
+                                     test_fold_index: None
+                                     test_path: ../input/test.csv
+                                     use_compound_names: False
+                                     use_kapt_prompt: False
+                                     val_fold_index: None
+                                     warmup_epochs: 2.0
+INFO - 01/17/26 14:43:37 - 0:00:01 - ========================
+                                     # Git Version: unknown #
+                                     ========================
+INFO - 01/17/26 14:43:37 - 0:00:01 - The experiment will be stored in ./dumped\0117-finetune\bbbp
+                                     
+INFO - 01/17/26 14:43:37 - 0:00:01 - Running command: python train.py --data_path '.\data\bbbp.csv' --dataset_type classification --metric auc --epochs 100 --num_runs 3 --gpu 0 --batch_size 256 --seed 51 --init_lr '1e-4' --split_type scaffold_balanced --step functional_prompt --exp_name finetune --exp_id bbbp --checkpoint_path '.\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl'
+
+INFO - 01/17/26 14:43:37 - 0:00:01 - Run 0
+INFO - 01/17/26 14:46:53 - 0:00:00 - ============ Initialized logger ============
+INFO - 01/17/26 14:46:53 - 0:00:00 - batch_size: 256
+                                     checkpoint_dir: None
+                                     checkpoint_path: .\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl
+                                     command: python train.py --data_path '.\data\bbbp.csv' --dataset_type classification --metric auc --epochs 100 --num_runs 3 --gpu 0 --batch_size 256 --seed 51 --init_lr '1e-4' --split_type scaffold_balanced --step functional_prompt --exp_name finetune --exp_id bbbp --checkpoint_path '.\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl' --exp_id "bbbp"
+                                     config_path: None
+                                     crossval_index_dir: None
+                                     crossval_index_file: None
+                                     data_path: .\data\bbbp.csv
+                                     dataset_type: classification
+                                     dump_path: ./dumped
+                                     epochs: 100
+                                     exp_id: bbbp
+                                     exp_name: finetune
+                                     features_generator: None
+                                     features_only: False
+                                     features_path: None
+                                     final_lr: 0.0001
+                                     folds_file: None
+                                     gpu: 0
+                                     init_lr: 0.0001
+                                     log_frequency: 10
+                                     max_data_size: None
+                                     max_lr: 0.001
+                                     metric: auc
+                                     multiclass_num_classes: 3
+                                     no_cache: False
+                                     no_cuda: False
+                                     no_features_scaling: False
+                                     num_runs: 3
+                                     preds_path: test_pred.csv
+                                     quiet: False
+                                     save_dir: ./ckpt
+                                     save_smiles_splits: False
+                                     seed: 51
+                                     separate_test_features_path: None
+                                     separate_test_path: None
+                                     separate_val_features_path: None
+                                     separate_val_path: None
+                                     show_individual_scores: False
+                                     split_sizes: [0.8, 0.1, 0.1]
+                                     split_type: scaffold_balanced
+                                     step: functional_prompt
+                                     temperature: 0.1
+                                     test: False
+                                     test_fold_index: None
+                                     test_path: ../input/test.csv
+                                     use_compound_names: False
+                                     use_kapt_prompt: False
+                                     val_fold_index: None
+                                     warmup_epochs: 2.0
+INFO - 01/17/26 14:46:53 - 0:00:00 - ========================
+                                     # Git Version: unknown #
+                                     ========================
+INFO - 01/17/26 14:46:53 - 0:00:00 - The experiment will be stored in ./dumped\0117-finetune\bbbp
+                                     
+INFO - 01/17/26 14:46:53 - 0:00:00 - Running command: python train.py --data_path '.\data\bbbp.csv' --dataset_type classification --metric auc --epochs 100 --num_runs 3 --gpu 0 --batch_size 256 --seed 51 --init_lr '1e-4' --split_type scaffold_balanced --step functional_prompt --exp_name finetune --exp_id bbbp --checkpoint_path '.\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl'
+
+INFO - 01/17/26 14:46:53 - 0:00:00 - Run 0
+INFO - 01/17/26 14:49:39 - 0:00:00 - ============ Initialized logger ============
+INFO - 01/17/26 14:49:39 - 0:00:00 - batch_size: 256
+                                     checkpoint_dir: None
+                                     checkpoint_path: .\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl
+                                     command: python train.py --data_path '.\data\bbbp.csv' --dataset_type classification --metric auc --epochs 100 --num_runs 3 --gpu 0 --batch_size 256 --seed 51 --init_lr '1e-4' --split_type scaffold_balanced --step functional_prompt --exp_name finetune --exp_id bbbp --checkpoint_path '.\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl' --exp_id "bbbp"
+                                     config_path: None
+                                     crossval_index_dir: None
+                                     crossval_index_file: None
+                                     data_path: .\data\bbbp.csv
+                                     dataset_type: classification
+                                     dump_path: ./dumped
+                                     epochs: 100
+                                     exp_id: bbbp
+                                     exp_name: finetune
+                                     features_generator: None
+                                     features_only: False
+                                     features_path: None
+                                     final_lr: 0.0001
+                                     folds_file: None
+                                     gpu: 0
+                                     init_lr: 0.0001
+                                     log_frequency: 10
+                                     max_data_size: None
+                                     max_lr: 0.001
+                                     metric: auc
+                                     multiclass_num_classes: 3
+                                     no_cache: False
+                                     no_cuda: False
+                                     no_features_scaling: False
+                                     num_runs: 3
+                                     preds_path: test_pred.csv
+                                     quiet: False
+                                     save_dir: ./ckpt
+                                     save_smiles_splits: False
+                                     seed: 51
+                                     separate_test_features_path: None
+                                     separate_test_path: None
+                                     separate_val_features_path: None
+                                     separate_val_path: None
+                                     show_individual_scores: False
+                                     split_sizes: [0.8, 0.1, 0.1]
+                                     split_type: scaffold_balanced
+                                     step: functional_prompt
+                                     temperature: 0.1
+                                     test: False
+                                     test_fold_index: None
+                                     test_path: ../input/test.csv
+                                     use_compound_names: False
+                                     use_kapt_prompt: False
+                                     val_fold_index: None
+                                     warmup_epochs: 2.0
+INFO - 01/17/26 14:49:39 - 0:00:00 - ========================
+                                     # Git Version: unknown #
+                                     ========================
+INFO - 01/17/26 14:49:39 - 0:00:00 - The experiment will be stored in ./dumped\0117-finetune\bbbp
+                                     
+INFO - 01/17/26 14:49:39 - 0:00:00 - Running command: python train.py --data_path '.\data\bbbp.csv' --dataset_type classification --metric auc --epochs 100 --num_runs 3 --gpu 0 --batch_size 256 --seed 51 --init_lr '1e-4' --split_type scaffold_balanced --step functional_prompt --exp_name finetune --exp_id bbbp --checkpoint_path '.\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl'
+
+INFO - 01/17/26 14:49:39 - 0:00:00 - Run 0
+INFO - 01/17/26 14:50:23 - 0:00:00 - ============ Initialized logger ============
+INFO - 01/17/26 14:50:23 - 0:00:00 - batch_size: 256
+                                     checkpoint_dir: None
+                                     checkpoint_path: .\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl
+                                     command: python train.py --data_path '.\data\bbbp.csv' --dataset_type classification --metric auc --epochs 100 --num_runs 3 --gpu 0 --batch_size 256 --seed 51 --init_lr '1e-4' --split_type scaffold_balanced --step functional_prompt --exp_name finetune --exp_id bbbp --checkpoint_path '.\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl' --exp_id "bbbp"
+                                     config_path: None
+                                     crossval_index_dir: None
+                                     crossval_index_file: None
+                                     data_path: .\data\bbbp.csv
+                                     dataset_type: classification
+                                     dump_path: ./dumped
+                                     epochs: 100
+                                     exp_id: bbbp
+                                     exp_name: finetune
+                                     features_generator: None
+                                     features_only: False
+                                     features_path: None
+                                     final_lr: 0.0001
+                                     folds_file: None
+                                     gpu: 0
+                                     init_lr: 0.0001
+                                     log_frequency: 10
+                                     max_data_size: None
+                                     max_lr: 0.001
+                                     metric: auc
+                                     multiclass_num_classes: 3
+                                     no_cache: False
+                                     no_cuda: False
+                                     no_features_scaling: False
+                                     num_runs: 3
+                                     preds_path: test_pred.csv
+                                     quiet: False
+                                     save_dir: ./ckpt
+                                     save_smiles_splits: False
+                                     seed: 51
+                                     separate_test_features_path: None
+                                     separate_test_path: None
+                                     separate_val_features_path: None
+                                     separate_val_path: None
+                                     show_individual_scores: False
+                                     split_sizes: [0.8, 0.1, 0.1]
+                                     split_type: scaffold_balanced
+                                     step: functional_prompt
+                                     temperature: 0.1
+                                     test: False
+                                     test_fold_index: None
+                                     test_path: ../input/test.csv
+                                     use_compound_names: False
+                                     use_kapt_prompt: False
+                                     val_fold_index: None
+                                     warmup_epochs: 2.0
+INFO - 01/17/26 14:50:23 - 0:00:00 - ========================
+                                     # Git Version: unknown #
+                                     ========================
+INFO - 01/17/26 14:50:23 - 0:00:00 - The experiment will be stored in ./dumped\0117-finetune\bbbp
+                                     
+INFO - 01/17/26 14:50:23 - 0:00:00 - Running command: python train.py --data_path '.\data\bbbp.csv' --dataset_type classification --metric auc --epochs 100 --num_runs 3 --gpu 0 --batch_size 256 --seed 51 --init_lr '1e-4' --split_type scaffold_balanced --step functional_prompt --exp_name finetune --exp_id bbbp --checkpoint_path '.\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl'
+
+INFO - 01/17/26 14:50:23 - 0:00:00 - Run 0
+INFO - 01/17/26 14:51:42 - 0:00:00 - ============ Initialized logger ============
+INFO - 01/17/26 14:51:42 - 0:00:00 - batch_size: 256
+                                     checkpoint_dir: None
+                                     checkpoint_path: .\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl
+                                     command: python train.py --data_path '.\data\bbbp.csv' --dataset_type classification --metric auc --epochs 100 --num_runs 3 --gpu 0 --batch_size 256 --seed 51 --init_lr '1e-4' --split_type scaffold_balanced --step functional_prompt --exp_name finetune --exp_id bbbp --checkpoint_path '.\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl' --exp_id "bbbp"
+                                     config_path: None
+                                     crossval_index_dir: None
+                                     crossval_index_file: None
+                                     data_path: .\data\bbbp.csv
+                                     dataset_type: classification
+                                     dump_path: ./dumped
+                                     epochs: 100
+                                     exp_id: bbbp
+                                     exp_name: finetune
+                                     features_generator: None
+                                     features_only: False
+                                     features_path: None
+                                     final_lr: 0.0001
+                                     folds_file: None
+                                     gpu: 0
+                                     init_lr: 0.0001
+                                     log_frequency: 10
+                                     max_data_size: None
+                                     max_lr: 0.001
+                                     metric: auc
+                                     multiclass_num_classes: 3
+                                     no_cache: False
+                                     no_cuda: False
+                                     no_features_scaling: False
+                                     num_runs: 3
+                                     preds_path: test_pred.csv
+                                     quiet: False
+                                     save_dir: ./ckpt
+                                     save_smiles_splits: False
+                                     seed: 51
+                                     separate_test_features_path: None
+                                     separate_test_path: None
+                                     separate_val_features_path: None
+                                     separate_val_path: None
+                                     show_individual_scores: False
+                                     split_sizes: [0.8, 0.1, 0.1]
+                                     split_type: scaffold_balanced
+                                     step: functional_prompt
+                                     temperature: 0.1
+                                     test: False
+                                     test_fold_index: None
+                                     test_path: ../input/test.csv
+                                     use_compound_names: False
+                                     use_kapt_prompt: False
+                                     val_fold_index: None
+                                     warmup_epochs: 2.0
+INFO - 01/17/26 14:51:42 - 0:00:00 - ========================
+                                     # Git Version: unknown #
+                                     ========================
+INFO - 01/17/26 14:51:42 - 0:00:00 - The experiment will be stored in ./dumped\0117-finetune\bbbp
+                                     
+INFO - 01/17/26 14:51:42 - 0:00:00 - Running command: python train.py --data_path '.\data\bbbp.csv' --dataset_type classification --metric auc --epochs 100 --num_runs 3 --gpu 0 --batch_size 256 --seed 51 --init_lr '1e-4' --split_type scaffold_balanced --step functional_prompt --exp_name finetune --exp_id bbbp --checkpoint_path '.\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl'
+
+INFO - 01/17/26 14:51:42 - 0:00:00 - Run 0
+INFO - 01/17/26 14:53:02 - 0:00:00 - ============ Initialized logger ============
+INFO - 01/17/26 14:53:02 - 0:00:00 - batch_size: 256
+                                     checkpoint_dir: None
+                                     checkpoint_path: .\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl
+                                     command: python train.py --data_path '.\data\bbbp.csv' --dataset_type classification --metric auc --epochs 100 --num_runs 3 --gpu 0 --batch_size 256 --seed 51 --init_lr '1e-4' --split_type scaffold_balanced --step functional_prompt --exp_name finetune --exp_id bbbp --checkpoint_path '.\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl' --exp_id "bbbp"
+                                     config_path: None
+                                     crossval_index_dir: None
+                                     crossval_index_file: None
+                                     data_path: .\data\bbbp.csv
+                                     dataset_type: classification
+                                     dump_path: ./dumped
+                                     epochs: 100
+                                     exp_id: bbbp
+                                     exp_name: finetune
+                                     features_generator: None
+                                     features_only: False
+                                     features_path: None
+                                     final_lr: 0.0001
+                                     folds_file: None
+                                     gpu: 0
+                                     init_lr: 0.0001
+                                     log_frequency: 10
+                                     max_data_size: None
+                                     max_lr: 0.001
+                                     metric: auc
+                                     multiclass_num_classes: 3
+                                     no_cache: False
+                                     no_cuda: False
+                                     no_features_scaling: False
+                                     num_runs: 3
+                                     preds_path: test_pred.csv
+                                     quiet: False
+                                     save_dir: ./ckpt
+                                     save_smiles_splits: False
+                                     seed: 51
+                                     separate_test_features_path: None
+                                     separate_test_path: None
+                                     separate_val_features_path: None
+                                     separate_val_path: None
+                                     show_individual_scores: False
+                                     split_sizes: [0.8, 0.1, 0.1]
+                                     split_type: scaffold_balanced
+                                     step: functional_prompt
+                                     temperature: 0.1
+                                     test: False
+                                     test_fold_index: None
+                                     test_path: ../input/test.csv
+                                     use_compound_names: False
+                                     use_kapt_prompt: False
+                                     val_fold_index: None
+                                     warmup_epochs: 2.0
+INFO - 01/17/26 14:53:02 - 0:00:00 - ========================
+                                     # Git Version: unknown #
+                                     ========================
+INFO - 01/17/26 14:53:02 - 0:00:00 - The experiment will be stored in ./dumped\0117-finetune\bbbp
+                                     
+INFO - 01/17/26 14:53:02 - 0:00:00 - Running command: python train.py --data_path '.\data\bbbp.csv' --dataset_type classification --metric auc --epochs 100 --num_runs 3 --gpu 0 --batch_size 256 --seed 51 --init_lr '1e-4' --split_type scaffold_balanced --step functional_prompt --exp_name finetune --exp_id bbbp --checkpoint_path '.\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl'
+
+INFO - 01/17/26 14:53:02 - 0:00:00 - Run 0
+INFO - 01/17/26 14:54:21 - 0:00:00 - ============ Initialized logger ============
+INFO - 01/17/26 14:54:21 - 0:00:00 - batch_size: 256
+                                     checkpoint_dir: None
+                                     checkpoint_path: .\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl
+                                     command: python train.py --data_path '.\data\bbbp.csv' --dataset_type classification --metric auc --epochs 100 --num_runs 3 --gpu 0 --batch_size 256 --seed 51 --init_lr '1e-4' --split_type scaffold_balanced --step functional_prompt --exp_name finetune --exp_id bbbp --checkpoint_path '.\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl' --exp_id "bbbp"
+                                     config_path: None
+                                     crossval_index_dir: None
+                                     crossval_index_file: None
+                                     data_path: .\data\bbbp.csv
+                                     dataset_type: classification
+                                     dump_path: ./dumped
+                                     epochs: 100
+                                     exp_id: bbbp
+                                     exp_name: finetune
+                                     features_generator: None
+                                     features_only: False
+                                     features_path: None
+                                     final_lr: 0.0001
+                                     folds_file: None
+                                     gpu: 0
+                                     init_lr: 0.0001
+                                     log_frequency: 10
+                                     max_data_size: None
+                                     max_lr: 0.001
+                                     metric: auc
+                                     multiclass_num_classes: 3
+                                     no_cache: False
+                                     no_cuda: False
+                                     no_features_scaling: False
+                                     num_runs: 3
+                                     preds_path: test_pred.csv
+                                     quiet: False
+                                     save_dir: ./ckpt
+                                     save_smiles_splits: False
+                                     seed: 51
+                                     separate_test_features_path: None
+                                     separate_test_path: None
+                                     separate_val_features_path: None
+                                     separate_val_path: None
+                                     show_individual_scores: False
+                                     split_sizes: [0.8, 0.1, 0.1]
+                                     split_type: scaffold_balanced
+                                     step: functional_prompt
+                                     temperature: 0.1
+                                     test: False
+                                     test_fold_index: None
+                                     test_path: ../input/test.csv
+                                     use_compound_names: False
+                                     use_kapt_prompt: False
+                                     val_fold_index: None
+                                     warmup_epochs: 2.0
+INFO - 01/17/26 14:54:21 - 0:00:00 - ========================
+                                     # Git Version: unknown #
+                                     ========================
+INFO - 01/17/26 14:54:21 - 0:00:00 - The experiment will be stored in ./dumped\0117-finetune\bbbp
+                                     
+INFO - 01/17/26 14:54:21 - 0:00:00 - Running command: python train.py --data_path '.\data\bbbp.csv' --dataset_type classification --metric auc --epochs 100 --num_runs 3 --gpu 0 --batch_size 256 --seed 51 --init_lr '1e-4' --split_type scaffold_balanced --step functional_prompt --exp_name finetune --exp_id bbbp --checkpoint_path '.\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl'
+
+INFO - 01/17/26 14:54:21 - 0:00:00 - Run 0
+INFO - 01/17/26 14:55:20 - 0:00:00 - ============ Initialized logger ============
+INFO - 01/17/26 14:55:20 - 0:00:00 - batch_size: 256
+                                     checkpoint_dir: None
+                                     checkpoint_path: .\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl
+                                     command: python train.py --data_path '.\data\bbbp.csv' --dataset_type classification --metric auc --epochs 100 --num_runs 3 --gpu 0 --batch_size 256 --seed 51 --init_lr '1e-4' --split_type scaffold_balanced --step functional_prompt --exp_name finetune --exp_id bbbp --checkpoint_path '.\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl' --exp_id "bbbp"
+                                     config_path: None
+                                     crossval_index_dir: None
+                                     crossval_index_file: None
+                                     data_path: .\data\bbbp.csv
+                                     dataset_type: classification
+                                     dump_path: ./dumped
+                                     epochs: 100
+                                     exp_id: bbbp
+                                     exp_name: finetune
+                                     features_generator: None
+                                     features_only: False
+                                     features_path: None
+                                     final_lr: 0.0001
+                                     folds_file: None
+                                     gpu: 0
+                                     init_lr: 0.0001
+                                     log_frequency: 10
+                                     max_data_size: None
+                                     max_lr: 0.001
+                                     metric: auc
+                                     multiclass_num_classes: 3
+                                     no_cache: False
+                                     no_cuda: False
+                                     no_features_scaling: False
+                                     num_runs: 3
+                                     preds_path: test_pred.csv
+                                     quiet: False
+                                     save_dir: ./ckpt
+                                     save_smiles_splits: False
+                                     seed: 51
+                                     separate_test_features_path: None
+                                     separate_test_path: None
+                                     separate_val_features_path: None
+                                     separate_val_path: None
+                                     show_individual_scores: False
+                                     split_sizes: [0.8, 0.1, 0.1]
+                                     split_type: scaffold_balanced
+                                     step: functional_prompt
+                                     temperature: 0.1
+                                     test: False
+                                     test_fold_index: None
+                                     test_path: ../input/test.csv
+                                     use_compound_names: False
+                                     use_kapt_prompt: False
+                                     val_fold_index: None
+                                     warmup_epochs: 2.0
+INFO - 01/17/26 14:55:20 - 0:00:00 - ========================
+                                     # Git Version: unknown #
+                                     ========================
+INFO - 01/17/26 14:55:20 - 0:00:00 - The experiment will be stored in ./dumped\0117-finetune\bbbp
+                                     
+INFO - 01/17/26 14:55:20 - 0:00:00 - Running command: python train.py --data_path '.\data\bbbp.csv' --dataset_type classification --metric auc --epochs 100 --num_runs 3 --gpu 0 --batch_size 256 --seed 51 --init_lr '1e-4' --split_type scaffold_balanced --step functional_prompt --exp_name finetune --exp_id bbbp --checkpoint_path '.\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl'
+
+INFO - 01/17/26 14:55:20 - 0:00:00 - Run 0
+INFO - 01/17/26 14:56:43 - 0:00:00 - ============ Initialized logger ============
+INFO - 01/17/26 14:56:43 - 0:00:00 - batch_size: 256
+                                     checkpoint_dir: None
+                                     checkpoint_path: .\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl
+                                     command: python train.py --data_path '.\data\bbbp.csv' --dataset_type classification --metric auc --epochs 100 --num_runs 3 --gpu 0 --batch_size 256 --seed 51 --init_lr '1e-4' --split_type scaffold_balanced --step functional_prompt --exp_name finetune --exp_id bbbp --checkpoint_path '.\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl' --exp_id "bbbp"
+                                     config_path: None
+                                     crossval_index_dir: None
+                                     crossval_index_file: None
+                                     data_path: .\data\bbbp.csv
+                                     dataset_type: classification
+                                     dump_path: ./dumped
+                                     epochs: 100
+                                     exp_id: bbbp
+                                     exp_name: finetune
+                                     features_generator: None
+                                     features_only: False
+                                     features_path: None
+                                     final_lr: 0.0001
+                                     folds_file: None
+                                     gpu: 0
+                                     init_lr: 0.0001
+                                     log_frequency: 10
+                                     max_data_size: None
+                                     max_lr: 0.001
+                                     metric: auc
+                                     multiclass_num_classes: 3
+                                     no_cache: False
+                                     no_cuda: False
+                                     no_features_scaling: False
+                                     num_runs: 3
+                                     preds_path: test_pred.csv
+                                     quiet: False
+                                     save_dir: ./ckpt
+                                     save_smiles_splits: False
+                                     seed: 51
+                                     separate_test_features_path: None
+                                     separate_test_path: None
+                                     separate_val_features_path: None
+                                     separate_val_path: None
+                                     show_individual_scores: False
+                                     split_sizes: [0.8, 0.1, 0.1]
+                                     split_type: scaffold_balanced
+                                     step: functional_prompt
+                                     temperature: 0.1
+                                     test: False
+                                     test_fold_index: None
+                                     test_path: ../input/test.csv
+                                     use_compound_names: False
+                                     use_kapt_prompt: False
+                                     val_fold_index: None
+                                     warmup_epochs: 2.0
+INFO - 01/17/26 14:56:43 - 0:00:00 - ========================
+                                     # Git Version: unknown #
+                                     ========================
+INFO - 01/17/26 14:56:43 - 0:00:00 - The experiment will be stored in ./dumped\0117-finetune\bbbp
+                                     
+INFO - 01/17/26 14:56:43 - 0:00:00 - Running command: python train.py --data_path '.\data\bbbp.csv' --dataset_type classification --metric auc --epochs 100 --num_runs 3 --gpu 0 --batch_size 256 --seed 51 --init_lr '1e-4' --split_type scaffold_balanced --step functional_prompt --exp_name finetune --exp_id bbbp --checkpoint_path '.\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl'
+
+INFO - 01/17/26 14:56:43 - 0:00:00 - Run 0
+INFO - 01/17/26 14:58:05 - 0:00:00 - ============ Initialized logger ============
+INFO - 01/17/26 14:58:05 - 0:00:00 - batch_size: 256
+                                     checkpoint_dir: None
+                                     checkpoint_path: .\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl
+                                     command: python train.py --data_path '.\data\bbbp.csv' --dataset_type classification --metric auc --epochs 100 --num_runs 3 --gpu 0 --batch_size 256 --seed 51 --init_lr '1e-4' --split_type scaffold_balanced --step functional_prompt --exp_name finetune --exp_id bbbp --checkpoint_path '.\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl' --exp_id "bbbp"
+                                     config_path: None
+                                     crossval_index_dir: None
+                                     crossval_index_file: None
+                                     data_path: .\data\bbbp.csv
+                                     dataset_type: classification
+                                     dump_path: ./dumped
+                                     epochs: 100
+                                     exp_id: bbbp
+                                     exp_name: finetune
+                                     features_generator: None
+                                     features_only: False
+                                     features_path: None
+                                     final_lr: 0.0001
+                                     folds_file: None
+                                     gpu: 0
+                                     init_lr: 0.0001
+                                     log_frequency: 10
+                                     max_data_size: None
+                                     max_lr: 0.001
+                                     metric: auc
+                                     multiclass_num_classes: 3
+                                     no_cache: False
+                                     no_cuda: False
+                                     no_features_scaling: False
+                                     num_runs: 3
+                                     preds_path: test_pred.csv
+                                     quiet: False
+                                     save_dir: ./ckpt
+                                     save_smiles_splits: False
+                                     seed: 51
+                                     separate_test_features_path: None
+                                     separate_test_path: None
+                                     separate_val_features_path: None
+                                     separate_val_path: None
+                                     show_individual_scores: False
+                                     split_sizes: [0.8, 0.1, 0.1]
+                                     split_type: scaffold_balanced
+                                     step: functional_prompt
+                                     temperature: 0.1
+                                     test: False
+                                     test_fold_index: None
+                                     test_path: ../input/test.csv
+                                     use_compound_names: False
+                                     use_kapt_prompt: False
+                                     val_fold_index: None
+                                     warmup_epochs: 2.0
+INFO - 01/17/26 14:58:05 - 0:00:00 - ========================
+                                     # Git Version: unknown #
+                                     ========================
+INFO - 01/17/26 14:58:05 - 0:00:00 - The experiment will be stored in ./dumped\0117-finetune\bbbp
+                                     
+INFO - 01/17/26 14:58:05 - 0:00:00 - Running command: python train.py --data_path '.\data\bbbp.csv' --dataset_type classification --metric auc --epochs 100 --num_runs 3 --gpu 0 --batch_size 256 --seed 51 --init_lr '1e-4' --split_type scaffold_balanced --step functional_prompt --exp_name finetune --exp_id bbbp --checkpoint_path '.\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl'
+
+INFO - 01/17/26 14:58:05 - 0:00:00 - Run 0
+INFO - 01/17/26 15:01:07 - 0:00:00 - ============ Initialized logger ============
+INFO - 01/17/26 15:01:07 - 0:00:00 - batch_size: 256
+                                     checkpoint_dir: None
+                                     checkpoint_path: .\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl
+                                     command: python train.py --data_path '.\data\bbbp.csv' --dataset_type classification --metric auc --epochs 100 --num_runs 3 --gpu 0 --batch_size 256 --seed 51 --init_lr '1e-4' --split_type scaffold_balanced --step functional_prompt --exp_name finetune --exp_id bbbp --checkpoint_path '.\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl' --exp_id "bbbp"
+                                     config_path: None
+                                     crossval_index_dir: None
+                                     crossval_index_file: None
+                                     data_path: .\data\bbbp.csv
+                                     dataset_type: classification
+                                     dump_path: ./dumped
+                                     epochs: 100
+                                     exp_id: bbbp
+                                     exp_name: finetune
+                                     features_generator: None
+                                     features_only: False
+                                     features_path: None
+                                     final_lr: 0.0001
+                                     folds_file: None
+                                     gpu: 0
+                                     init_lr: 0.0001
+                                     log_frequency: 10
+                                     max_data_size: None
+                                     max_lr: 0.001
+                                     metric: auc
+                                     multiclass_num_classes: 3
+                                     no_cache: False
+                                     no_cuda: False
+                                     no_features_scaling: False
+                                     num_runs: 3
+                                     preds_path: test_pred.csv
+                                     quiet: False
+                                     save_dir: ./ckpt
+                                     save_smiles_splits: False
+                                     seed: 51
+                                     separate_test_features_path: None
+                                     separate_test_path: None
+                                     separate_val_features_path: None
+                                     separate_val_path: None
+                                     show_individual_scores: False
+                                     split_sizes: [0.8, 0.1, 0.1]
+                                     split_type: scaffold_balanced
+                                     step: functional_prompt
+                                     temperature: 0.1
+                                     test: False
+                                     test_fold_index: None
+                                     test_path: ../input/test.csv
+                                     use_compound_names: False
+                                     use_kapt_prompt: False
+                                     val_fold_index: None
+                                     warmup_epochs: 2.0
+INFO - 01/17/26 15:01:07 - 0:00:00 - ========================
+                                     # Git Version: unknown #
+                                     ========================
+INFO - 01/17/26 15:01:07 - 0:00:00 - The experiment will be stored in ./dumped\0117-finetune\bbbp
+                                     
+INFO - 01/17/26 15:01:07 - 0:00:00 - Running command: python train.py --data_path '.\data\bbbp.csv' --dataset_type classification --metric auc --epochs 100 --num_runs 3 --gpu 0 --batch_size 256 --seed 51 --init_lr '1e-4' --split_type scaffold_balanced --step functional_prompt --exp_name finetune --exp_id bbbp --checkpoint_path '.\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl'
+
+INFO - 01/17/26 15:01:07 - 0:00:00 - Run 0
+INFO - 01/17/26 15:11:11 - 0:00:00 - ============ Initialized logger ============
+INFO - 01/17/26 15:11:11 - 0:00:00 - batch_size: 256
+                                     checkpoint_dir: None
+                                     checkpoint_path: .\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl
+                                     command: python train.py --data_path '.\data\bbbp.csv' --dataset_type classification --metric auc --epochs 100 --num_runs 3 --gpu 0 --batch_size 256 --seed 51 --init_lr '1e-4' --split_type scaffold_balanced --step functional_prompt --exp_name finetune --exp_id bbbp --checkpoint_path '.\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl' --exp_id "bbbp"
+                                     config_path: None
+                                     crossval_index_dir: None
+                                     crossval_index_file: None
+                                     data_path: .\data\bbbp.csv
+                                     dataset_type: classification
+                                     dump_path: ./dumped
+                                     epochs: 100
+                                     exp_id: bbbp
+                                     exp_name: finetune
+                                     features_generator: None
+                                     features_only: False
+                                     features_path: None
+                                     final_lr: 0.0001
+                                     folds_file: None
+                                     gpu: 0
+                                     init_lr: 0.0001
+                                     log_frequency: 10
+                                     max_data_size: None
+                                     max_lr: 0.001
+                                     metric: auc
+                                     multiclass_num_classes: 3
+                                     no_cache: False
+                                     no_cuda: False
+                                     no_features_scaling: False
+                                     num_runs: 3
+                                     preds_path: test_pred.csv
+                                     quiet: False
+                                     save_dir: ./ckpt
+                                     save_smiles_splits: False
+                                     seed: 51
+                                     separate_test_features_path: None
+                                     separate_test_path: None
+                                     separate_val_features_path: None
+                                     separate_val_path: None
+                                     show_individual_scores: False
+                                     split_sizes: [0.8, 0.1, 0.1]
+                                     split_type: scaffold_balanced
+                                     step: functional_prompt
+                                     temperature: 0.1
+                                     test: False
+                                     test_fold_index: None
+                                     test_path: ../input/test.csv
+                                     use_compound_names: False
+                                     use_kapt_prompt: False
+                                     val_fold_index: None
+                                     warmup_epochs: 2.0
+INFO - 01/17/26 15:11:11 - 0:00:00 - ========================
+                                     # Git Version: unknown #
+                                     ========================
+INFO - 01/17/26 15:11:11 - 0:00:00 - The experiment will be stored in ./dumped\0117-finetune\bbbp
+                                     
+INFO - 01/17/26 15:11:11 - 0:00:00 - Running command: python train.py --data_path '.\data\bbbp.csv' --dataset_type classification --metric auc --epochs 100 --num_runs 3 --gpu 0 --batch_size 256 --seed 51 --init_lr '1e-4' --split_type scaffold_balanced --step functional_prompt --exp_name finetune --exp_id bbbp --checkpoint_path '.\dumped\pretrained_graph_encoder\original_CMPN_0623_1350_14000th_epoch.pkl'
+
+INFO - 01/17/26 15:11:11 - 0:00:00 - Run 0
+INFO - 01/17/26 15:11:11 - 0:00:00 - Loading data
+INFO - 01/17/26 15:11:11 - 0:00:00 - Number of tasks = 1
+DEBUG - 01/17/26 15:11:11 - 0:00:00 - Splitting data with seed 51
+DEBUG - 01/17/26 15:11:11 - 0:00:01 - Total scaffolds = 1,025 | train scaffolds = 866 | val scaffolds = 57 | test scaffolds = 102
+DEBUG - 01/17/26 15:11:11 - 0:00:01 - Label averages per scaffold, in decreasing order of scaffold frequency,capped at 10 scaffolds and 20 labels: [(array([0.72992701]), array([137], dtype=int64)), (array([0.]), array([1], dtype=int64)), (array([0.]), array([1], dtype=int64)), (array([0.]), array([1], dtype=int64)), (array([1.]), array([2], dtype=int64)), (array([1.]), array([1], dtype=int64)), (array([1.]), array([1], dtype=int64)), (array([0.5]), array([2], dtype=int64)), (array([1.]), array([1], dtype=int64)), (array([1.]), array([1], dtype=int64))]
+DEBUG - 01/17/26 15:11:11 - 0:00:01 - Class sizes
+DEBUG - 01/17/26 15:11:11 - 0:00:01 - p_np 0: 23.49%, 1: 76.51%

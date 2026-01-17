@@ -1,0 +1,436 @@
+INFO - 01/17/26 23:43:58 - 0:00:00 - ============ Initialized logger ============
+INFO - 01/17/26 23:43:58 - 0:00:00 - activation: ReLU
+                                     atom_messages: False
+                                     batch_size: 32
+                                     bias: False
+                                     checkpoint_dir: None
+                                     checkpoint_path: None
+                                     checkpoint_paths: None
+                                     command: python train_kapt.py --data_path 'data\bbbp.csv' --dataset_type classification --gpu 0 --init_lr '1e-4' --epochs 50 --batch_size 32 --num_runs 1 --seed 51 --exp_name kapt_bbbp --exp_id kapt_bbbp --step functional_prompt --save_model_path 'checkpoints\kapt_bbbp_best.pt' --exp_id "kapt_bbbp"
+                                     config_path: None
+                                     crossval_index_dir: None
+                                     crossval_index_file: None
+                                     cuda: True
+                                     data_path: data\bbbp.csv
+                                     dataset_type: classification
+                                     depth: 3
+                                     dropout: 0.0
+                                     dump_path: dumped
+                                     encoder_name: CMPNN
+                                     ensemble_size: 1
+                                     epochs: 50
+                                     exp_id: kapt_bbbp
+                                     exp_name: kapt_bbbp
+                                     features_generator: None
+                                     features_only: False
+                                     features_path: None
+                                     features_scaling: True
+                                     ffn_hidden_size: 300
+                                     ffn_num_layers: 2
+                                     final_lr: 0.0001
+                                     folds_file: None
+                                     gpu: 0
+                                     hidden_size: 300
+                                     init_lr: 0.0001
+                                     log_frequency: 10
+                                     max_data_size: None
+                                     max_lr: 0.001
+                                     metric: auc
+                                     minimize_score: False
+                                     multiclass_num_classes: 3
+                                     no_cache: False
+                                     num_lrs: 1
+                                     num_runs: 1
+                                     quiet: False
+                                     save_dir: ./ckpt
+                                     save_model_path: checkpoints\kapt_bbbp_best.pt
+                                     save_smiles_splits: False
+                                     seed: 51
+                                     separate_test_features_path: None
+                                     separate_test_path: None
+                                     separate_val_features_path: None
+                                     separate_val_path: None
+                                     show_individual_scores: False
+                                     split_sizes: [0.8, 0.1, 0.1]
+                                     split_type: random
+                                     step: functional_prompt
+                                     task_id: 0
+                                     temperature: 0.1
+                                     test: False
+                                     test_fold_index: None
+                                     undirected: False
+                                     use_compound_names: False
+                                     use_input_features: None
+                                     use_kapt: True
+                                     val_fold_index: None
+                                     warmup_epochs: 2.0
+INFO - 01/17/26 23:48:02 - 0:00:00 - ============ Initialized logger ============
+INFO - 01/17/26 23:48:02 - 0:00:00 - activation: ReLU
+                                     atom_messages: False
+                                     batch_size: 32
+                                     bias: False
+                                     checkpoint_dir: None
+                                     checkpoint_path: None
+                                     checkpoint_paths: None
+                                     command: python train_kapt.py --data_path 'data\bbbp.csv' --dataset_type classification --gpu 0 --init_lr '1e-4' --epochs 50 --batch_size 32 --num_runs 1 --seed 51 --exp_name kapt_bbbp --exp_id kapt_bbbp --step functional_prompt --save_model_path 'checkpoints\kapt_bbbp_best.pt' --exp_id "kapt_bbbp"
+                                     config_path: None
+                                     crossval_index_dir: None
+                                     crossval_index_file: None
+                                     cuda: True
+                                     data_path: data\bbbp.csv
+                                     dataset_type: classification
+                                     depth: 3
+                                     dropout: 0.0
+                                     dump_path: dumped
+                                     encoder_name: CMPNN
+                                     ensemble_size: 1
+                                     epochs: 50
+                                     exp_id: kapt_bbbp
+                                     exp_name: kapt_bbbp
+                                     features_generator: None
+                                     features_only: False
+                                     features_path: None
+                                     features_scaling: True
+                                     ffn_hidden_size: 300
+                                     ffn_num_layers: 2
+                                     final_lr: 0.0001
+                                     folds_file: None
+                                     gpu: 0
+                                     hidden_size: 300
+                                     init_lr: 0.0001
+                                     log_frequency: 10
+                                     max_data_size: None
+                                     max_lr: 0.001
+                                     metric: auc
+                                     minimize_score: False
+                                     multiclass_num_classes: 3
+                                     no_cache: False
+                                     num_lrs: 1
+                                     num_runs: 1
+                                     quiet: False
+                                     save_dir: ./ckpt
+                                     save_model_path: checkpoints\kapt_bbbp_best.pt
+                                     save_smiles_splits: False
+                                     seed: 51
+                                     separate_test_features_path: None
+                                     separate_test_path: None
+                                     separate_val_features_path: None
+                                     separate_val_path: None
+                                     show_individual_scores: False
+                                     split_sizes: [0.8, 0.1, 0.1]
+                                     split_type: random
+                                     step: functional_prompt
+                                     task_id: 0
+                                     temperature: 0.1
+                                     test: False
+                                     test_fold_index: None
+                                     undirected: False
+                                     use_compound_names: False
+                                     use_input_features: None
+                                     use_kapt: True
+                                     val_fold_index: None
+                                     warmup_epochs: 2.0
+INFO - 01/17/26 23:48:02 - 0:00:00 - ========================
+                                     # Git Version: unknown #
+                                     ========================
+INFO - 01/17/26 23:48:02 - 0:00:00 - The experiment will be stored in dumped\0117-kapt_bbbp\kapt_bbbp
+                                     
+INFO - 01/17/26 23:48:02 - 0:00:00 - Running command: python train_kapt.py --data_path 'data\bbbp.csv' --dataset_type classification --gpu 0 --init_lr '1e-4' --epochs 50 --batch_size 32 --num_runs 1 --seed 51 --exp_name kapt_bbbp --exp_id kapt_bbbp --step functional_prompt --save_model_path 'checkpoints\kapt_bbbp_best.pt'
+
+INFO - 01/17/26 23:48:02 - 0:00:00 - Using GPU: 0
+INFO - 01/17/26 23:48:02 - 0:00:00 - Initialized KAPT Training | GPU: 0 | Epochs: 50 | Batch Size: 32
+INFO - 01/17/26 23:48:02 - 0:00:00 - KAPT Training | Task ID: 0 | Step: functional_prompt
+INFO - 01/17/26 23:48:02 - 0:00:00 - ===== Run 1/1 (Seed: 51) =====
+INFO - 01/17/26 23:56:39 - 0:00:00 - ============ Initialized logger ============
+INFO - 01/17/26 23:56:39 - 0:00:00 - activation: ReLU
+                                     atom_messages: False
+                                     batch_size: 32
+                                     bias: False
+                                     checkpoint_dir: None
+                                     checkpoint_path: None
+                                     checkpoint_paths: None
+                                     command: python train_kapt.py --data_path 'data\bbbp.csv' --dataset_type classification --gpu 0 --init_lr '1e-4' --epochs 50 --batch_size 32 --num_runs 1 --seed 51 --exp_name kapt_bbbp --exp_id kapt_bbbp --step functional_prompt --save_model_path 'checkpoints\kapt_bbbp_best.pt' --exp_id "kapt_bbbp"
+                                     config_path: None
+                                     crossval_index_dir: None
+                                     crossval_index_file: None
+                                     cuda: True
+                                     data_path: data\bbbp.csv
+                                     dataset_type: classification
+                                     depth: 3
+                                     dropout: 0.0
+                                     dump_path: dumped
+                                     encoder_name: CMPNN
+                                     ensemble_size: 1
+                                     epochs: 50
+                                     exp_id: kapt_bbbp
+                                     exp_name: kapt_bbbp
+                                     features_generator: None
+                                     features_only: False
+                                     features_path: None
+                                     features_scaling: True
+                                     ffn_hidden_size: 300
+                                     ffn_num_layers: 2
+                                     final_lr: 0.0001
+                                     folds_file: None
+                                     gpu: 0
+                                     hidden_size: 300
+                                     init_lr: 0.0001
+                                     log_frequency: 10
+                                     max_data_size: None
+                                     max_lr: 0.001
+                                     metric: auc
+                                     minimize_score: False
+                                     multiclass_num_classes: 3
+                                     no_cache: False
+                                     num_lrs: 1
+                                     num_runs: 1
+                                     quiet: False
+                                     save_dir: ./ckpt
+                                     save_model_path: checkpoints\kapt_bbbp_best.pt
+                                     save_smiles_splits: False
+                                     seed: 51
+                                     separate_test_features_path: None
+                                     separate_test_path: None
+                                     separate_val_features_path: None
+                                     separate_val_path: None
+                                     show_individual_scores: False
+                                     split_sizes: [0.8, 0.1, 0.1]
+                                     split_type: random
+                                     step: functional_prompt
+                                     task_id: 0
+                                     temperature: 0.1
+                                     test: False
+                                     test_fold_index: None
+                                     undirected: False
+                                     use_compound_names: False
+                                     use_input_features: None
+                                     use_kapt: True
+                                     val_fold_index: None
+                                     warmup_epochs: 2.0
+INFO - 01/17/26 23:56:39 - 0:00:00 - ========================
+                                     # Git Version: unknown #
+                                     ========================
+INFO - 01/17/26 23:56:39 - 0:00:00 - The experiment will be stored in dumped\0117-kapt_bbbp\kapt_bbbp
+                                     
+INFO - 01/17/26 23:56:39 - 0:00:00 - Running command: python train_kapt.py --data_path 'data\bbbp.csv' --dataset_type classification --gpu 0 --init_lr '1e-4' --epochs 50 --batch_size 32 --num_runs 1 --seed 51 --exp_name kapt_bbbp --exp_id kapt_bbbp --step functional_prompt --save_model_path 'checkpoints\kapt_bbbp_best.pt'
+
+INFO - 01/17/26 23:56:39 - 0:00:00 - Using GPU: 0
+INFO - 01/17/26 23:56:39 - 0:00:00 - Initialized KAPT Training | GPU: 0 | Epochs: 50 | Batch Size: 32
+INFO - 01/17/26 23:56:39 - 0:00:00 - KAPT Training | Task ID: 0 | Step: functional_prompt
+INFO - 01/17/26 23:56:39 - 0:00:00 - ===== Run 1/1 (Seed: 51) =====
+INFO - 01/17/26 23:56:39 - 0:00:00 - Loading data
+INFO - 01/17/26 23:56:40 - 0:00:00 - Number of tasks = 1
+DEBUG - 01/17/26 23:56:40 - 0:00:00 - Splitting data with seed 51
+DEBUG - 01/17/26 23:56:40 - 0:00:00 - Class sizes
+DEBUG - 01/17/26 23:56:40 - 0:00:00 - p_np 0: 23.49%, 1: 76.51%
+DEBUG - 01/17/26 23:56:40 - 0:00:00 - Total size = 2,039 | train size = 1,631 | val size = 204 | test size = 204
+DEBUG - 01/17/26 23:56:40 - 0:00:00 - Building model 0
+DEBUG - 01/17/26 23:56:40 - 0:00:00 - MoleculeModel(
+                                        (sigmoid): Sigmoid()
+                                        (encoder): CMPN(
+                                          (encoder): CMPNEncoder(
+                                            (dropout_layer): Dropout(p=0.0, inplace=False)
+                                            (act_func): ReLU()
+                                            (W_i_atom): PromptGeneratorOutput(
+                                              (self_out): Linear(in_features=133, out_features=300, bias=False)
+                                              (prompt_generator): Prompt_generator(
+                                                (linear): Linear(in_features=133, out_features=300, bias=True)
+                                                (attention_layer_1): AttentionLayer(
+                                                  (w_q): Linear(in_features=133, out_features=32, bias=True)
+                                                  (w_k): Linear(in_features=133, out_features=32, bias=True)
+                                                  (w_v): Linear(in_features=133, out_features=32, bias=True)
+                                                  (dense): Linear(in_features=32, out_features=133, bias=True)
+                                                  (LayerNorm): LayerNorm((133,), eps=1e-06, elementwise_affine=True)
+                                                  (dropout): Dropout(p=0.1, inplace=False)
+                                                )
+                                                (attention_layer_2): AttentionLayer(
+                                                  (w_q): Linear(in_features=133, out_features=32, bias=True)
+                                                  (w_k): Linear(in_features=133, out_features=32, bias=True)
+                                                  (w_v): Linear(in_features=133, out_features=32, bias=True)
+                                                  (dense): Linear(in_features=32, out_features=133, bias=True)
+                                                  (LayerNorm): LayerNorm((133,), eps=1e-06, elementwise_affine=True)
+                                                  (dropout): Dropout(p=0.1, inplace=False)
+                                                )
+                                                (norm): LayerNorm((300,), eps=1e-05, elementwise_affine=True)
+                                              )
+                                            )
+                                            (W_i_bond): Linear(in_features=147, out_features=300, bias=False)
+                                            (W_h_atom): Linear(in_features=447, out_features=300, bias=False)
+                                            (W_h_0): Linear(in_features=300, out_features=300, bias=False)
+                                            (W_h_1): Linear(in_features=300, out_features=300, bias=False)
+                                            (W_o): Linear(in_features=600, out_features=300, bias=True)
+                                            (gru): BatchGRU(
+                                              (gru): GRU(300, 300, batch_first=True, bidirectional=True)
+                                            )
+                                            (lr): Linear(in_features=900, out_features=300, bias=False)
+                                            (W_i_atom_new): Linear(in_features=266, out_features=300, bias=False)
+                                          )
+                                        )
+                                        (ffn): Sequential(
+                                          (0): Dropout(p=0.0, inplace=False)
+                                          (1): Linear(in_features=300, out_features=300, bias=True)
+                                          (2): ReLU()
+                                          (3): Dropout(p=0.0, inplace=False)
+                                          (4): Linear(in_features=300, out_features=1, bias=True)
+                                        )
+                                      )
+DEBUG - 01/17/26 23:56:40 - 0:00:00 - Number of parameters = 2,178,806
+DEBUG - 01/17/26 23:56:40 - 0:00:00 - Moving model to cuda
+INFO - 01/18/26 00:11:44 - 0:15:05 - Epoch 0
+INFO - 01/18/26 00:16:39 - 0:20:00 - Validation auc = 0.604282
+INFO - 01/18/26 00:16:39 - 0:20:00 - test auc = 0.607804
+INFO - 01/18/26 00:16:39 - 0:20:00 - Epoch 1
+INFO - 01/18/26 00:16:43 - 0:20:03 - Validation auc = 0.495867
+INFO - 01/18/26 00:16:43 - 0:20:04 - test auc = 0.550595
+INFO - 01/18/26 00:16:43 - 0:20:04 - Epoch 2
+INFO - 01/18/26 00:16:46 - 0:20:07 - Validation auc = 0.546551
+INFO - 01/18/26 00:16:47 - 0:20:07 - test auc = 0.541336
+INFO - 01/18/26 00:16:47 - 0:20:07 - Epoch 3
+INFO - 01/18/26 00:16:50 - 0:20:10 - Validation auc = 0.549871
+INFO - 01/18/26 00:16:50 - 0:20:11 - test auc = 0.623512
+INFO - 01/18/26 00:16:50 - 0:20:11 - Epoch 4
+INFO - 01/18/26 00:16:53 - 0:20:14 - Validation auc = 0.605299
+INFO - 01/18/26 00:16:54 - 0:20:14 - test auc = 0.610698
+INFO - 01/18/26 00:16:54 - 0:20:14 - Epoch 5
+INFO - 01/18/26 00:16:57 - 0:20:18 - Validation auc = 0.610652
+INFO - 01/18/26 00:16:57 - 0:20:18 - test auc = 0.626323
+INFO - 01/18/26 00:16:57 - 0:20:18 - Epoch 6
+INFO - 01/18/26 00:17:00 - 0:20:21 - Validation auc = 0.524190
+INFO - 01/18/26 00:17:01 - 0:20:21 - test auc = 0.542907
+INFO - 01/18/26 00:17:01 - 0:20:21 - Epoch 7
+INFO - 01/18/26 00:17:04 - 0:20:25 - Validation auc = 0.714731
+INFO - 01/18/26 00:17:04 - 0:20:25 - test auc = 0.731812
+INFO - 01/18/26 00:17:04 - 0:20:25 - Epoch 8
+INFO - 01/18/26 00:17:08 - 0:20:28 - Validation auc = 0.742241
+INFO - 01/18/26 00:17:08 - 0:20:29 - test auc = 0.743552
+INFO - 01/18/26 00:17:08 - 0:20:29 - Epoch 9
+INFO - 01/18/26 00:17:11 - 0:20:32 - Validation auc = 0.600014
+INFO - 01/18/26 00:17:12 - 0:20:32 - test auc = 0.609210
+INFO - 01/18/26 00:17:12 - 0:20:32 - Epoch 10
+INFO - 01/18/26 00:17:15 - 0:20:36 - Validation auc = 0.675295
+INFO - 01/18/26 00:17:15 - 0:20:36 - test auc = 0.706763
+INFO - 01/18/26 00:17:15 - 0:20:36 - Epoch 11
+INFO - 01/18/26 00:17:18 - 0:20:39 - Validation auc = 0.770633
+INFO - 01/18/26 00:17:19 - 0:20:39 - test auc = 0.794643
+INFO - 01/18/26 00:17:19 - 0:20:40 - Epoch 12
+INFO - 01/18/26 00:17:22 - 0:20:43 - Validation auc = 0.739192
+INFO - 01/18/26 00:17:22 - 0:20:43 - test auc = 0.789104
+INFO - 01/18/26 00:17:22 - 0:20:43 - Epoch 13
+INFO - 01/18/26 00:17:26 - 0:20:46 - Validation auc = 0.822740
+INFO - 01/18/26 00:17:26 - 0:20:47 - test auc = 0.870618
+INFO - 01/18/26 00:17:26 - 0:20:47 - Epoch 14
+INFO - 01/18/26 00:17:29 - 0:20:50 - Validation auc = 0.758301
+INFO - 01/18/26 00:17:29 - 0:20:50 - test auc = 0.804481
+INFO - 01/18/26 00:17:29 - 0:20:50 - Epoch 15
+INFO - 01/18/26 00:17:33 - 0:20:54 - Validation auc = 0.719068
+INFO - 01/18/26 00:17:33 - 0:20:54 - test auc = 0.771825
+INFO - 01/18/26 00:17:33 - 0:20:54 - Epoch 16
+INFO - 01/18/26 00:17:36 - 0:20:57 - Validation auc = 0.757149
+INFO - 01/18/26 00:17:37 - 0:20:57 - test auc = 0.791336
+INFO - 01/18/26 00:17:37 - 0:20:57 - Epoch 17
+INFO - 01/18/26 00:17:40 - 0:21:01 - Validation auc = 0.698807
+INFO - 01/18/26 00:17:40 - 0:21:01 - test auc = 0.620122
+INFO - 01/18/26 00:17:40 - 0:21:01 - Epoch 18
+INFO - 01/18/26 00:17:44 - 0:21:04 - Validation auc = 0.800786
+INFO - 01/18/26 00:17:44 - 0:21:05 - test auc = 0.808036
+INFO - 01/18/26 00:17:44 - 0:21:05 - Epoch 19
+INFO - 01/18/26 00:17:47 - 0:21:08 - Validation auc = 0.815693
+INFO - 01/18/26 00:17:48 - 0:21:08 - test auc = 0.844411
+INFO - 01/18/26 00:17:48 - 0:21:08 - Epoch 20
+INFO - 01/18/26 00:17:51 - 0:21:12 - Validation auc = 0.696029
+INFO - 01/18/26 00:17:51 - 0:21:12 - test auc = 0.757110
+INFO - 01/18/26 00:17:51 - 0:21:12 - Epoch 21
+INFO - 01/18/26 00:17:54 - 0:21:15 - Validation auc = 0.723065
+INFO - 01/18/26 00:17:55 - 0:21:15 - test auc = 0.750496
+INFO - 01/18/26 00:17:55 - 0:21:15 - Epoch 22
+INFO - 01/18/26 00:17:58 - 0:21:19 - Validation auc = 0.709310
+INFO - 01/18/26 00:17:58 - 0:21:19 - test auc = 0.712632
+INFO - 01/18/26 00:17:58 - 0:21:19 - Epoch 23
+INFO - 01/18/26 00:18:02 - 0:21:22 - Validation auc = 0.759181
+INFO - 01/18/26 00:18:02 - 0:21:23 - test auc = 0.792576
+INFO - 01/18/26 00:18:02 - 0:21:23 - Epoch 24
+INFO - 01/18/26 00:18:05 - 0:21:26 - Validation auc = 0.776257
+INFO - 01/18/26 00:18:06 - 0:21:26 - test auc = 0.802910
+INFO - 01/18/26 00:18:06 - 0:21:26 - Epoch 25
+INFO - 01/18/26 00:18:09 - 0:21:30 - Validation auc = 0.792248
+INFO - 01/18/26 00:18:09 - 0:21:30 - test auc = 0.809193
+INFO - 01/18/26 00:18:09 - 0:21:30 - Epoch 26
+INFO - 01/18/26 00:18:12 - 0:21:33 - Validation auc = 0.792790
+INFO - 01/18/26 00:18:13 - 0:21:33 - test auc = 0.819610
+INFO - 01/18/26 00:18:13 - 0:21:33 - Epoch 27
+INFO - 01/18/26 00:18:16 - 0:21:37 - Validation auc = 0.808104
+INFO - 01/18/26 00:18:16 - 0:21:37 - test auc = 0.852348
+INFO - 01/18/26 00:18:16 - 0:21:37 - Epoch 28
+INFO - 01/18/26 00:18:19 - 0:21:40 - Validation auc = 0.821385
+INFO - 01/18/26 00:18:20 - 0:21:40 - test auc = 0.858300
+INFO - 01/18/26 00:18:20 - 0:21:40 - Epoch 29
+INFO - 01/18/26 00:18:23 - 0:21:44 - Validation auc = 0.834530
+INFO - 01/18/26 00:18:23 - 0:21:44 - test auc = 0.871693
+INFO - 01/18/26 00:18:23 - 0:21:44 - Epoch 30
+INFO - 01/18/26 00:18:27 - 0:21:47 - Validation auc = 0.844017
+INFO - 01/18/26 00:18:27 - 0:21:48 - test auc = 0.864087
+INFO - 01/18/26 00:18:27 - 0:21:48 - Epoch 31
+INFO - 01/18/26 00:18:30 - 0:21:51 - Validation auc = 0.841035
+INFO - 01/18/26 00:18:30 - 0:21:51 - test auc = 0.864914
+INFO - 01/18/26 00:18:30 - 0:21:51 - Epoch 32
+INFO - 01/18/26 00:18:34 - 0:21:54 - Validation auc = 0.836021
+INFO - 01/18/26 00:18:34 - 0:21:55 - test auc = 0.850529
+INFO - 01/18/26 00:18:34 - 0:21:55 - Epoch 33
+INFO - 01/18/26 00:18:37 - 0:21:58 - Validation auc = 0.857569
+INFO - 01/18/26 00:18:38 - 0:21:58 - test auc = 0.859127
+INFO - 01/18/26 00:18:38 - 0:21:58 - Epoch 34
+INFO - 01/18/26 00:18:41 - 0:22:02 - Validation auc = 0.863938
+INFO - 01/18/26 00:18:41 - 0:22:02 - test auc = 0.867560
+INFO - 01/18/26 00:18:41 - 0:22:02 - Epoch 35
+INFO - 01/18/26 00:18:45 - 0:22:05 - Validation auc = 0.863532
+INFO - 01/18/26 00:18:45 - 0:22:06 - test auc = 0.856978
+INFO - 01/18/26 00:18:45 - 0:22:06 - Epoch 36
+INFO - 01/18/26 00:18:48 - 0:22:09 - Validation auc = 0.860144
+INFO - 01/18/26 00:18:49 - 0:22:09 - test auc = 0.878968
+INFO - 01/18/26 00:18:49 - 0:22:09 - Epoch 37
+INFO - 01/18/26 00:18:52 - 0:22:13 - Validation auc = 0.807291
+INFO - 01/18/26 00:18:52 - 0:22:13 - test auc = 0.816634
+INFO - 01/18/26 00:18:52 - 0:22:13 - Epoch 38
+INFO - 01/18/26 00:18:55 - 0:22:16 - Validation auc = 0.829110
+INFO - 01/18/26 00:18:56 - 0:22:16 - test auc = 0.803241
+INFO - 01/18/26 00:18:56 - 0:22:16 - Epoch 39
+INFO - 01/18/26 00:18:59 - 0:22:20 - Validation auc = 0.849302
+INFO - 01/18/26 00:18:59 - 0:22:20 - test auc = 0.859292
+INFO - 01/18/26 00:18:59 - 0:22:20 - Epoch 40
+INFO - 01/18/26 00:19:03 - 0:22:23 - Validation auc = 0.858382
+INFO - 01/18/26 00:19:03 - 0:22:24 - test auc = 0.861111
+INFO - 01/18/26 00:19:03 - 0:22:24 - Epoch 41
+INFO - 01/18/26 00:19:06 - 0:22:27 - Validation auc = 0.873967
+INFO - 01/18/26 00:19:06 - 0:22:27 - test auc = 0.868221
+INFO - 01/18/26 00:19:06 - 0:22:27 - Epoch 42
+INFO - 01/18/26 00:19:10 - 0:22:30 - Validation auc = 0.867462
+INFO - 01/18/26 00:19:10 - 0:22:31 - test auc = 0.864749
+INFO - 01/18/26 00:19:10 - 0:22:31 - Epoch 43
+INFO - 01/18/26 00:19:13 - 0:22:34 - Validation auc = 0.873967
+INFO - 01/18/26 00:19:14 - 0:22:34 - test auc = 0.883267
+INFO - 01/18/26 00:19:14 - 0:22:34 - Epoch 44
+INFO - 01/18/26 00:19:17 - 0:22:38 - Validation auc = 0.872747
+INFO - 01/18/26 00:19:17 - 0:22:38 - test auc = 0.873843
+INFO - 01/18/26 00:19:17 - 0:22:38 - Epoch 45
+INFO - 01/18/26 00:19:20 - 0:22:41 - Validation auc = 0.878710
+INFO - 01/18/26 00:19:21 - 0:22:42 - test auc = 0.892196
+INFO - 01/18/26 00:19:21 - 0:22:42 - Epoch 46
+INFO - 01/18/26 00:19:24 - 0:22:45 - Validation auc = 0.883182
+INFO - 01/18/26 00:19:24 - 0:22:45 - test auc = 0.882275
+INFO - 01/18/26 00:19:24 - 0:22:45 - Epoch 47
+INFO - 01/18/26 00:19:28 - 0:22:48 - Validation auc = 0.893617
+INFO - 01/18/26 00:19:28 - 0:22:49 - test auc = 0.894180
+INFO - 01/18/26 00:19:28 - 0:22:49 - Epoch 48
+INFO - 01/18/26 00:19:31 - 0:22:52 - Validation auc = 0.891991
+INFO - 01/18/26 00:19:32 - 0:22:52 - test auc = 0.896329
+INFO - 01/18/26 00:19:32 - 0:22:52 - Epoch 49
+INFO - 01/18/26 00:19:35 - 0:22:56 - Validation auc = 0.880472
+INFO - 01/18/26 00:19:35 - 0:22:56 - test auc = 0.873181
+INFO - 01/18/26 00:19:35 - 0:22:56 - Model 0 best validation auc = 0.893617 on epoch 47
+DEBUG - 01/18/26 00:19:35 - 0:22:56 - Moving model to cuda
+INFO - 01/18/26 00:19:35 - 0:22:56 - Model 0 test auc = 0.894180
+INFO - 01/18/26 00:19:35 - 0:22:56 - Ensemble test auc = 0.894180
+INFO - 01/18/26 00:19:36 - 0:22:56 - 
+                                     ===== KAPT Training Results =====
+INFO - 01/18/26 00:19:36 - 0:22:56 - Overall test auc = 0.894180 +/- 0.000000
+INFO - 01/18/26 00:19:36 - 0:22:56 - Overall test p_np auc = 0.894180 +/- 0.000000

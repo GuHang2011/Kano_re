@@ -1,0 +1,595 @@
+INFO - 01/18/26 00:32:05 - 0:00:00 - ============ Initialized logger ============
+INFO - 01/18/26 00:32:05 - 0:00:00 - activation: ReLU
+                                     atom_messages: False
+                                     batch_size: 32
+                                     bias: False
+                                     checkpoint_dir: None
+                                     checkpoint_path: None
+                                     checkpoint_paths: None
+                                     command: python train_kapt.py --data_path 'data\bace.csv' --dataset_type classification --gpu 0 --init_lr '1e-4' --epochs 50 --batch_size 32 --num_runs 1 --seed 51 --exp_name kapt_bace --exp_id kapt_bace --step functional_prompt --save_model_path 'checkpoints\kapt_bace_best.pt' --exp_id "kapt_bace"
+                                     config_path: None
+                                     crossval_index_dir: None
+                                     crossval_index_file: None
+                                     cuda: True
+                                     data_path: data\bace.csv
+                                     dataset_type: classification
+                                     depth: 3
+                                     dropout: 0.0
+                                     dump_path: dumped
+                                     encoder_name: CMPNN
+                                     ensemble_size: 1
+                                     epochs: 50
+                                     exp_id: kapt_bace
+                                     exp_name: kapt_bace
+                                     features_generator: None
+                                     features_only: False
+                                     features_path: None
+                                     features_scaling: True
+                                     ffn_hidden_size: 300
+                                     ffn_num_layers: 2
+                                     final_lr: 0.0001
+                                     folds_file: None
+                                     gpu: 0
+                                     hidden_size: 300
+                                     init_lr: 0.0001
+                                     log_frequency: 10
+                                     max_data_size: None
+                                     max_lr: 0.001
+                                     metric: auc
+                                     minimize_score: False
+                                     multiclass_num_classes: 3
+                                     no_cache: False
+                                     num_lrs: 1
+                                     num_runs: 1
+                                     quiet: False
+                                     save_dir: ./ckpt
+                                     save_model_path: checkpoints\kapt_bace_best.pt
+                                     save_smiles_splits: False
+                                     seed: 51
+                                     separate_test_features_path: None
+                                     separate_test_path: None
+                                     separate_val_features_path: None
+                                     separate_val_path: None
+                                     show_individual_scores: False
+                                     split_sizes: [0.8, 0.1, 0.1]
+                                     split_type: random
+                                     step: functional_prompt
+                                     task_id: 0
+                                     temperature: 0.1
+                                     test: False
+                                     test_fold_index: None
+                                     undirected: False
+                                     use_compound_names: False
+                                     use_input_features: None
+                                     use_kapt: True
+                                     val_fold_index: None
+                                     warmup_epochs: 2.0
+INFO - 01/18/26 00:32:05 - 0:00:00 - ========================
+                                     # Git Version: unknown #
+                                     ========================
+INFO - 01/18/26 00:32:05 - 0:00:00 - The experiment will be stored in dumped\0118-kapt_bace\kapt_bace
+                                     
+INFO - 01/18/26 00:32:05 - 0:00:00 - Running command: python train_kapt.py --data_path 'data\bace.csv' --dataset_type classification --gpu 0 --init_lr '1e-4' --epochs 50 --batch_size 32 --num_runs 1 --seed 51 --exp_name kapt_bace --exp_id kapt_bace --step functional_prompt --save_model_path 'checkpoints\kapt_bace_best.pt'
+
+INFO - 01/18/26 00:32:05 - 0:00:00 - Using GPU: 0
+INFO - 01/18/26 00:32:05 - 0:00:00 - Initialized KAPT Training | GPU: 0 | Epochs: 50 | Batch Size: 32
+INFO - 01/18/26 00:32:05 - 0:00:00 - KAPT Training | Task ID: 0 | Step: functional_prompt
+INFO - 01/18/26 00:32:05 - 0:00:00 - ===== Run 1/1 (Seed: 51) =====
+INFO - 01/18/26 00:32:05 - 0:00:00 - Loading data
+INFO - 01/18/26 00:32:05 - 0:00:00 - Number of tasks = 1
+DEBUG - 01/18/26 00:32:05 - 0:00:00 - Splitting data with seed 51
+DEBUG - 01/18/26 00:32:05 - 0:00:00 - Class sizes
+DEBUG - 01/18/26 00:32:05 - 0:00:00 - Class 0: 54.33%, 1: 45.67%
+DEBUG - 01/18/26 00:32:05 - 0:00:00 - Total size = 1,513 | train size = 1,210 | val size = 151 | test size = 152
+DEBUG - 01/18/26 00:32:05 - 0:00:00 - Building model 0
+DEBUG - 01/18/26 00:32:05 - 0:00:00 - MoleculeModel(
+                                        (sigmoid): Sigmoid()
+                                        (encoder): CMPN(
+                                          (encoder): CMPNEncoder(
+                                            (dropout_layer): Dropout(p=0.0, inplace=False)
+                                            (act_func): ReLU()
+                                            (W_i_atom): PromptGeneratorOutput(
+                                              (self_out): Linear(in_features=133, out_features=300, bias=False)
+                                              (prompt_generator): Prompt_generator(
+                                                (linear): Linear(in_features=133, out_features=300, bias=True)
+                                                (attention_layer_1): AttentionLayer(
+                                                  (w_q): Linear(in_features=133, out_features=32, bias=True)
+                                                  (w_k): Linear(in_features=133, out_features=32, bias=True)
+                                                  (w_v): Linear(in_features=133, out_features=32, bias=True)
+                                                  (dense): Linear(in_features=32, out_features=133, bias=True)
+                                                  (LayerNorm): LayerNorm((133,), eps=1e-06, elementwise_affine=True)
+                                                  (dropout): Dropout(p=0.1, inplace=False)
+                                                )
+                                                (attention_layer_2): AttentionLayer(
+                                                  (w_q): Linear(in_features=133, out_features=32, bias=True)
+                                                  (w_k): Linear(in_features=133, out_features=32, bias=True)
+                                                  (w_v): Linear(in_features=133, out_features=32, bias=True)
+                                                  (dense): Linear(in_features=32, out_features=133, bias=True)
+                                                  (LayerNorm): LayerNorm((133,), eps=1e-06, elementwise_affine=True)
+                                                  (dropout): Dropout(p=0.1, inplace=False)
+                                                )
+                                                (norm): LayerNorm((300,), eps=1e-05, elementwise_affine=True)
+                                              )
+                                            )
+                                            (W_i_bond): Linear(in_features=147, out_features=300, bias=False)
+                                            (W_h_atom): Linear(in_features=447, out_features=300, bias=False)
+                                            (W_h_0): Linear(in_features=300, out_features=300, bias=False)
+                                            (W_h_1): Linear(in_features=300, out_features=300, bias=False)
+                                            (W_o): Linear(in_features=600, out_features=300, bias=True)
+                                            (gru): BatchGRU(
+                                              (gru): GRU(300, 300, batch_first=True, bidirectional=True)
+                                            )
+                                            (lr): Linear(in_features=900, out_features=300, bias=False)
+                                            (W_i_atom_new): Linear(in_features=266, out_features=300, bias=False)
+                                          )
+                                        )
+                                        (ffn): Sequential(
+                                          (0): Dropout(p=0.0, inplace=False)
+                                          (1): Linear(in_features=300, out_features=300, bias=True)
+                                          (2): ReLU()
+                                          (3): Dropout(p=0.0, inplace=False)
+                                          (4): Linear(in_features=300, out_features=1, bias=True)
+                                        )
+                                      )
+DEBUG - 01/18/26 00:32:05 - 0:00:00 - Number of parameters = 2,178,806
+DEBUG - 01/18/26 00:32:05 - 0:00:00 - Moving model to cuda
+INFO - 01/18/26 00:49:12 - 0:17:07 - Epoch 0
+INFO - 01/18/26 00:55:06 - 0:23:02 - Validation auc = 0.590088
+INFO - 01/18/26 00:55:07 - 0:23:02 - test auc = 0.569837
+INFO - 01/18/26 00:55:07 - 0:23:02 - Epoch 1
+INFO - 01/18/26 00:55:11 - 0:23:06 - Validation auc = 0.532424
+INFO - 01/18/26 00:55:11 - 0:23:06 - test auc = 0.594656
+INFO - 01/18/26 00:55:11 - 0:23:06 - Epoch 2
+INFO - 01/18/26 00:55:15 - 0:23:10 - Validation auc = 0.438836
+INFO - 01/18/26 00:55:16 - 0:23:11 - test auc = 0.447917
+INFO - 01/18/26 00:55:16 - 0:23:11 - Epoch 3
+INFO - 01/18/26 00:55:19 - 0:23:15 - Validation auc = 0.523581
+INFO - 01/18/26 00:55:20 - 0:23:15 - test auc = 0.532609
+INFO - 01/18/26 00:55:20 - 0:23:15 - Epoch 4
+INFO - 01/18/26 00:55:23 - 0:23:19 - Validation auc = 0.645818
+INFO - 01/18/26 00:55:24 - 0:23:19 - test auc = 0.668659
+INFO - 01/18/26 00:55:24 - 0:23:19 - Epoch 5
+INFO - 01/18/26 00:55:28 - 0:23:23 - Validation auc = 0.537859
+INFO - 01/18/26 00:55:28 - 0:23:23 - test auc = 0.603442
+INFO - 01/18/26 00:55:28 - 0:23:23 - Epoch 6
+INFO - 01/18/26 00:55:32 - 0:23:27 - Validation auc = 0.546794
+INFO - 01/18/26 00:55:32 - 0:23:27 - test auc = 0.541214
+INFO - 01/18/26 00:55:32 - 0:23:27 - Epoch 7
+INFO - 01/18/26 00:55:36 - 0:23:31 - Validation auc = 0.638357
+INFO - 01/18/26 00:55:36 - 0:23:32 - test auc = 0.652355
+INFO - 01/18/26 00:55:36 - 0:23:32 - Epoch 8
+INFO - 01/18/26 00:55:40 - 0:23:36 - Validation auc = 0.648950
+INFO - 01/18/26 00:55:41 - 0:23:36 - test auc = 0.722192
+INFO - 01/18/26 00:55:41 - 0:23:36 - Epoch 9
+INFO - 01/18/26 00:55:45 - 0:23:40 - Validation auc = 0.559690
+INFO - 01/18/26 00:55:45 - 0:23:40 - test auc = 0.533514
+INFO - 01/18/26 00:55:45 - 0:23:40 - Epoch 10
+INFO - 01/18/26 00:55:49 - 0:23:44 - Validation auc = 0.620302
+INFO - 01/18/26 00:55:49 - 0:23:44 - test auc = 0.649366
+INFO - 01/18/26 00:55:49 - 0:23:44 - Epoch 11
+INFO - 01/18/26 00:55:53 - 0:23:48 - Validation auc = 0.543294
+INFO - 01/18/26 00:55:53 - 0:23:49 - test auc = 0.650181
+INFO - 01/18/26 00:55:53 - 0:23:49 - Epoch 12
+INFO - 01/18/26 00:55:57 - 0:23:53 - Validation auc = 0.577469
+INFO - 01/18/26 00:55:58 - 0:23:53 - test auc = 0.722826
+INFO - 01/18/26 00:55:58 - 0:23:53 - Epoch 13
+INFO - 01/18/26 00:56:02 - 0:23:57 - Validation auc = 0.657517
+INFO - 01/18/26 00:56:02 - 0:23:58 - test auc = 0.730616
+INFO - 01/18/26 00:56:02 - 0:23:58 - Epoch 14
+INFO - 01/18/26 00:56:06 - 0:24:02 - Validation auc = 0.505711
+INFO - 01/18/26 00:56:07 - 0:24:02 - test auc = 0.600091
+INFO - 01/18/26 00:56:07 - 0:24:02 - Epoch 15
+INFO - 01/18/26 00:56:10 - 0:24:06 - Validation auc = 0.535556
+INFO - 01/18/26 00:56:11 - 0:24:06 - test auc = 0.653804
+INFO - 01/18/26 00:56:11 - 0:24:06 - Epoch 16
+INFO - 01/18/26 00:56:15 - 0:24:10 - Validation auc = 0.498618
+INFO - 01/18/26 00:56:15 - 0:24:10 - test auc = 0.573188
+INFO - 01/18/26 00:56:15 - 0:24:10 - Epoch 17
+INFO - 01/18/26 00:56:19 - 0:24:14 - Validation auc = 0.675387
+INFO - 01/18/26 00:56:19 - 0:24:15 - test auc = 0.750272
+INFO - 01/18/26 00:56:19 - 0:24:15 - Epoch 18
+INFO - 01/18/26 00:56:23 - 0:24:19 - Validation auc = 0.644989
+INFO - 01/18/26 00:56:24 - 0:24:19 - test auc = 0.793841
+INFO - 01/18/26 00:56:24 - 0:24:19 - Epoch 19
+INFO - 01/18/26 00:56:28 - 0:24:23 - Validation auc = 0.472458
+INFO - 01/18/26 00:56:28 - 0:24:23 - test auc = 0.554438
+INFO - 01/18/26 00:56:28 - 0:24:23 - Epoch 20
+INFO - 01/18/26 00:56:32 - 0:24:27 - Validation auc = 0.674282
+INFO - 01/18/26 00:56:32 - 0:24:28 - test auc = 0.783696
+INFO - 01/18/26 00:56:32 - 0:24:28 - Epoch 21
+INFO - 01/18/26 00:56:36 - 0:24:32 - Validation auc = 0.650976
+INFO - 01/18/26 00:56:37 - 0:24:32 - test auc = 0.672826
+INFO - 01/18/26 00:56:37 - 0:24:32 - Epoch 22
+INFO - 01/18/26 00:56:41 - 0:24:36 - Validation auc = 0.649226
+INFO - 01/18/26 00:56:41 - 0:24:36 - test auc = 0.767935
+INFO - 01/18/26 00:56:41 - 0:24:36 - Epoch 23
+INFO - 01/18/26 00:56:45 - 0:24:40 - Validation auc = 0.546610
+INFO - 01/18/26 00:56:45 - 0:24:40 - test auc = 0.734601
+INFO - 01/18/26 00:56:45 - 0:24:40 - Epoch 24
+INFO - 01/18/26 00:56:49 - 0:24:44 - Validation auc = 0.669031
+INFO - 01/18/26 00:56:49 - 0:24:45 - test auc = 0.762047
+INFO - 01/18/26 00:56:49 - 0:24:45 - Epoch 25
+INFO - 01/18/26 00:56:53 - 0:24:49 - Validation auc = 0.714444
+INFO - 01/18/26 00:56:54 - 0:24:49 - test auc = 0.775906
+INFO - 01/18/26 00:56:54 - 0:24:49 - Epoch 26
+INFO - 01/18/26 00:56:58 - 0:24:53 - Validation auc = 0.651437
+INFO - 01/18/26 00:56:58 - 0:24:53 - test auc = 0.724819
+INFO - 01/18/26 00:56:58 - 0:24:53 - Epoch 27
+INFO - 01/18/26 00:57:02 - 0:24:57 - Validation auc = 0.497237
+INFO - 01/18/26 00:57:02 - 0:24:58 - test auc = 0.639855
+INFO - 01/18/26 00:57:02 - 0:24:58 - Epoch 28
+INFO - 01/18/26 00:57:06 - 0:25:01 - Validation auc = 0.618828
+INFO - 01/18/26 00:57:06 - 0:25:02 - test auc = 0.746920
+INFO - 01/18/26 00:57:06 - 0:25:02 - Epoch 29
+INFO - 01/18/26 00:57:10 - 0:25:05 - Validation auc = 0.665991
+INFO - 01/18/26 00:57:11 - 0:25:06 - test auc = 0.786957
+INFO - 01/18/26 00:57:11 - 0:25:06 - Epoch 30
+INFO - 01/18/26 00:57:14 - 0:25:10 - Validation auc = 0.674282
+INFO - 01/18/26 00:57:15 - 0:25:10 - test auc = 0.752899
+INFO - 01/18/26 00:57:15 - 0:25:10 - Epoch 31
+INFO - 01/18/26 00:57:19 - 0:25:14 - Validation auc = 0.651437
+INFO - 01/18/26 00:57:19 - 0:25:14 - test auc = 0.800543
+INFO - 01/18/26 00:57:19 - 0:25:14 - Epoch 32
+INFO - 01/18/26 00:57:23 - 0:25:18 - Validation auc = 0.709930
+INFO - 01/18/26 00:57:23 - 0:25:18 - test auc = 0.773551
+INFO - 01/18/26 00:57:23 - 0:25:18 - Epoch 33
+INFO - 01/18/26 00:57:27 - 0:25:22 - Validation auc = 0.623250
+INFO - 01/18/26 00:57:27 - 0:25:23 - test auc = 0.726993
+INFO - 01/18/26 00:57:27 - 0:25:23 - Epoch 34
+INFO - 01/18/26 00:57:31 - 0:25:26 - Validation auc = 0.621039
+INFO - 01/18/26 00:57:32 - 0:25:27 - test auc = 0.778623
+INFO - 01/18/26 00:57:32 - 0:25:27 - Epoch 35
+INFO - 01/18/26 00:57:36 - 0:25:31 - Validation auc = 0.721721
+INFO - 01/18/26 00:57:36 - 0:25:31 - test auc = 0.777717
+INFO - 01/18/26 00:57:36 - 0:25:31 - Epoch 36
+INFO - 01/18/26 00:57:40 - 0:25:35 - Validation auc = 0.676861
+INFO - 01/18/26 00:57:40 - 0:25:36 - test auc = 0.806703
+INFO - 01/18/26 00:57:40 - 0:25:36 - Epoch 37
+INFO - 01/18/26 00:57:44 - 0:25:40 - Validation auc = 0.690125
+INFO - 01/18/26 00:57:45 - 0:25:40 - test auc = 0.804620
+INFO - 01/18/26 00:57:45 - 0:25:40 - Epoch 38
+INFO - 01/18/26 00:57:49 - 0:25:44 - Validation auc = 0.738025
+INFO - 01/18/26 00:57:49 - 0:25:44 - test auc = 0.805254
+INFO - 01/18/26 00:57:49 - 0:25:44 - Epoch 39
+INFO - 01/18/26 00:57:53 - 0:25:48 - Validation auc = 0.707627
+INFO - 01/18/26 00:57:53 - 0:25:48 - test auc = 0.741033
+INFO - 01/18/26 00:57:53 - 0:25:48 - Epoch 40
+INFO - 01/18/26 00:57:57 - 0:25:52 - Validation auc = 0.598747
+INFO - 01/18/26 00:57:57 - 0:25:53 - test auc = 0.747283
+INFO - 01/18/26 00:57:57 - 0:25:53 - Epoch 41
+INFO - 01/18/26 00:58:01 - 0:25:57 - Validation auc = 0.698324
+INFO - 01/18/26 00:58:02 - 0:25:57 - test auc = 0.731884
+INFO - 01/18/26 00:58:02 - 0:25:57 - Epoch 42
+INFO - 01/18/26 00:58:06 - 0:26:01 - Validation auc = 0.727708
+INFO - 01/18/26 00:58:06 - 0:26:01 - test auc = 0.788315
+INFO - 01/18/26 00:58:06 - 0:26:01 - Epoch 43
+INFO - 01/18/26 00:58:10 - 0:26:05 - Validation auc = 0.737841
+INFO - 01/18/26 00:58:10 - 0:26:06 - test auc = 0.830525
+INFO - 01/18/26 00:58:10 - 0:26:06 - Epoch 44
+INFO - 01/18/26 00:58:15 - 0:26:10 - Validation auc = 0.421150
+INFO - 01/18/26 00:58:15 - 0:26:10 - test auc = 0.536775
+INFO - 01/18/26 00:58:15 - 0:26:10 - Epoch 45
+INFO - 01/18/26 00:58:19 - 0:26:14 - Validation auc = 0.597366
+INFO - 01/18/26 00:58:19 - 0:26:15 - test auc = 0.707428
+INFO - 01/18/26 00:58:19 - 0:26:15 - Epoch 46
+INFO - 01/18/26 00:58:24 - 0:26:19 - Validation auc = 0.740789
+INFO - 01/18/26 00:58:24 - 0:26:19 - test auc = 0.769203
+INFO - 01/18/26 00:58:24 - 0:26:19 - Epoch 47
+INFO - 01/18/26 00:58:28 - 0:26:23 - Validation auc = 0.720247
+INFO - 01/18/26 00:58:28 - 0:26:24 - test auc = 0.767391
+INFO - 01/18/26 00:58:28 - 0:26:24 - Epoch 48
+INFO - 01/18/26 00:58:32 - 0:26:27 - Validation auc = 0.681835
+INFO - 01/18/26 00:58:33 - 0:26:28 - test auc = 0.754167
+INFO - 01/18/26 00:58:33 - 0:26:28 - Epoch 49
+INFO - 01/18/26 00:58:37 - 0:26:32 - Validation auc = 0.651161
+INFO - 01/18/26 00:58:37 - 0:26:32 - test auc = 0.764312
+INFO - 01/18/26 00:58:37 - 0:26:32 - Model 0 best validation auc = 0.740789 on epoch 46
+DEBUG - 01/18/26 00:58:37 - 0:26:32 - Moving model to cuda
+INFO - 01/18/26 00:58:37 - 0:26:33 - Model 0 test auc = 0.769203
+INFO - 01/18/26 00:58:37 - 0:26:33 - Ensemble test auc = 0.769203
+INFO - 01/18/26 00:58:38 - 0:26:33 - 
+                                     ===== KAPT Training Results =====
+INFO - 01/18/26 00:58:38 - 0:26:33 - Overall test auc = 0.769203 +/- 0.000000
+INFO - 01/18/26 00:58:38 - 0:26:33 - Overall test Class auc = 0.769203 +/- 0.000000
+DEBUG - 01/18/26 00:58:38 - 0:26:33 - Moving model to cuda
+INFO - 01/18/26 01:05:33 - 0:00:00 - ============ Initialized logger ============
+INFO - 01/18/26 01:05:33 - 0:00:00 - activation: ReLU
+                                     atom_messages: False
+                                     batch_size: 32
+                                     bias: False
+                                     checkpoint_dir: None
+                                     checkpoint_path: None
+                                     checkpoint_paths: None
+                                     command: python train_kapt.py --data_path 'data\bace.csv' --dataset_type classification --gpu 0 --init_lr '1e-4' --epochs 50 --batch_size 32 --num_runs 1 --seed 51 --exp_name kapt_bace --exp_id kapt_bace --step functional_prompt --save_model_path 'checkpoints\kapt_bace_best.pt' --exp_id "kapt_bace"
+                                     config_path: None
+                                     crossval_index_dir: None
+                                     crossval_index_file: None
+                                     cuda: True
+                                     data_path: data\bace.csv
+                                     dataset_type: classification
+                                     depth: 3
+                                     dropout: 0.0
+                                     dump_path: dumped
+                                     encoder_name: CMPNN
+                                     ensemble_size: 1
+                                     epochs: 50
+                                     exp_id: kapt_bace
+                                     exp_name: kapt_bace
+                                     features_generator: None
+                                     features_only: False
+                                     features_path: None
+                                     features_scaling: True
+                                     ffn_hidden_size: 300
+                                     ffn_num_layers: 2
+                                     final_lr: 0.0001
+                                     folds_file: None
+                                     gpu: 0
+                                     hidden_size: 300
+                                     init_lr: 0.0001
+                                     log_frequency: 10
+                                     max_data_size: None
+                                     max_lr: 0.001
+                                     metric: auc
+                                     minimize_score: False
+                                     multiclass_num_classes: 3
+                                     no_cache: False
+                                     num_lrs: 1
+                                     num_runs: 1
+                                     quiet: False
+                                     save_dir: ./ckpt
+                                     save_model_path: checkpoints\kapt_bace_best.pt
+                                     save_smiles_splits: False
+                                     seed: 51
+                                     separate_test_features_path: None
+                                     separate_test_path: None
+                                     separate_val_features_path: None
+                                     separate_val_path: None
+                                     show_individual_scores: False
+                                     split_sizes: [0.8, 0.1, 0.1]
+                                     split_type: random
+                                     step: functional_prompt
+                                     task_id: 0
+                                     temperature: 0.1
+                                     test: False
+                                     test_fold_index: None
+                                     undirected: False
+                                     use_compound_names: False
+                                     use_input_features: None
+                                     use_kapt: True
+                                     val_fold_index: None
+                                     warmup_epochs: 2.0
+INFO - 01/18/26 01:05:34 - 0:00:00 - ========================
+                                     # Git Version: unknown #
+                                     ========================
+INFO - 01/18/26 01:05:34 - 0:00:00 - The experiment will be stored in dumped\0118-kapt_bace\kapt_bace
+                                     
+INFO - 01/18/26 01:05:34 - 0:00:00 - Running command: python train_kapt.py --data_path 'data\bace.csv' --dataset_type classification --gpu 0 --init_lr '1e-4' --epochs 50 --batch_size 32 --num_runs 1 --seed 51 --exp_name kapt_bace --exp_id kapt_bace --step functional_prompt --save_model_path 'checkpoints\kapt_bace_best.pt'
+
+INFO - 01/18/26 01:05:34 - 0:00:00 - Using GPU: 0
+INFO - 01/18/26 01:05:34 - 0:00:00 - Initialized KAPT Training | GPU: 0 | Epochs: 50 | Batch Size: 32 | Step: functional_prompt | Dataset Type: classification
+INFO - 01/18/26 01:05:34 - 0:00:00 - KAPT Training | Step: functional_prompt
+INFO - 01/18/26 01:05:34 - 0:00:00 - ===== Run 1/1 (Seed: 51) =====
+INFO - 01/18/26 01:05:34 - 0:00:00 - Loading data
+INFO - 01/18/26 01:05:34 - 0:00:00 - Number of tasks = 1
+DEBUG - 01/18/26 01:05:34 - 0:00:00 - Splitting data with seed 51
+DEBUG - 01/18/26 01:05:34 - 0:00:00 - Class sizes
+DEBUG - 01/18/26 01:05:34 - 0:00:00 - Class 0: 54.33%, 1: 45.67%
+DEBUG - 01/18/26 01:05:34 - 0:00:00 - Total size = 1,513 | train size = 1,210 | val size = 151 | test size = 152
+DEBUG - 01/18/26 01:05:34 - 0:00:00 - Building model 0
+DEBUG - 01/18/26 01:05:34 - 0:00:00 - MoleculeModel(
+                                        (sigmoid): Sigmoid()
+                                        (encoder): CMPN(
+                                          (encoder): CMPNEncoder(
+                                            (dropout_layer): Dropout(p=0.0, inplace=False)
+                                            (act_func): ReLU()
+                                            (W_i_atom): PromptGeneratorOutput(
+                                              (self_out): Linear(in_features=133, out_features=300, bias=False)
+                                              (prompt_generator): Prompt_generator(
+                                                (linear): Linear(in_features=133, out_features=300, bias=True)
+                                                (attention_layer_1): AttentionLayer(
+                                                  (w_q): Linear(in_features=133, out_features=32, bias=True)
+                                                  (w_k): Linear(in_features=133, out_features=32, bias=True)
+                                                  (w_v): Linear(in_features=133, out_features=32, bias=True)
+                                                  (dense): Linear(in_features=32, out_features=133, bias=True)
+                                                  (LayerNorm): LayerNorm((133,), eps=1e-06, elementwise_affine=True)
+                                                  (dropout): Dropout(p=0.1, inplace=False)
+                                                )
+                                                (attention_layer_2): AttentionLayer(
+                                                  (w_q): Linear(in_features=133, out_features=32, bias=True)
+                                                  (w_k): Linear(in_features=133, out_features=32, bias=True)
+                                                  (w_v): Linear(in_features=133, out_features=32, bias=True)
+                                                  (dense): Linear(in_features=32, out_features=133, bias=True)
+                                                  (LayerNorm): LayerNorm((133,), eps=1e-06, elementwise_affine=True)
+                                                  (dropout): Dropout(p=0.1, inplace=False)
+                                                )
+                                                (norm): LayerNorm((300,), eps=1e-05, elementwise_affine=True)
+                                              )
+                                            )
+                                            (W_i_bond): Linear(in_features=147, out_features=300, bias=False)
+                                            (W_h_atom): Linear(in_features=447, out_features=300, bias=False)
+                                            (W_h_0): Linear(in_features=300, out_features=300, bias=False)
+                                            (W_h_1): Linear(in_features=300, out_features=300, bias=False)
+                                            (W_o): Linear(in_features=600, out_features=300, bias=True)
+                                            (gru): BatchGRU(
+                                              (gru): GRU(300, 300, batch_first=True, bidirectional=True)
+                                            )
+                                            (lr): Linear(in_features=900, out_features=300, bias=False)
+                                            (W_i_atom_new): Linear(in_features=266, out_features=300, bias=False)
+                                          )
+                                        )
+                                        (ffn): Sequential(
+                                          (0): Dropout(p=0.0, inplace=False)
+                                          (1): Linear(in_features=300, out_features=300, bias=True)
+                                          (2): ReLU()
+                                          (3): Dropout(p=0.0, inplace=False)
+                                          (4): Linear(in_features=300, out_features=1, bias=True)
+                                        )
+                                      )
+DEBUG - 01/18/26 01:05:34 - 0:00:00 - Number of parameters = 2,178,806
+DEBUG - 01/18/26 01:05:34 - 0:00:00 - Moving model to cuda
+INFO - 01/18/26 01:21:51 - 0:16:18 - Epoch 0
+INFO - 01/18/26 01:27:13 - 0:21:40 - Validation auc = 0.428150
+INFO - 01/18/26 01:27:14 - 0:21:40 - test auc = 0.442572
+INFO - 01/18/26 01:27:14 - 0:21:40 - Epoch 1
+INFO - 01/18/26 01:27:17 - 0:21:44 - Validation auc = 0.533898
+INFO - 01/18/26 01:27:18 - 0:21:44 - test auc = 0.617391
+INFO - 01/18/26 01:27:18 - 0:21:44 - Epoch 2
+INFO - 01/18/26 01:27:21 - 0:21:48 - Warning: Found a task with predictions all 0s or all 1s
+INFO - 01/18/26 01:27:21 - 0:21:48 - Validation auc = nan
+WARNING - 01/18/26 01:27:21 - 0:21:48 - NaN or Inf found in input tensor.
+INFO - 01/18/26 01:27:21 - 0:21:48 - Warning: Found a task with predictions all 0s or all 1s
+INFO - 01/18/26 01:27:21 - 0:21:48 - test auc = nan
+INFO - 01/18/26 01:27:21 - 0:21:48 - Epoch 3
+INFO - 01/18/26 01:27:25 - 0:21:51 - Validation auc = 0.490789
+INFO - 01/18/26 01:27:25 - 0:21:52 - test auc = 0.550725
+INFO - 01/18/26 01:27:25 - 0:21:52 - Epoch 4
+INFO - 01/18/26 01:27:29 - 0:21:55 - Validation auc = 0.621223
+INFO - 01/18/26 01:27:29 - 0:21:55 - test auc = 0.552264
+INFO - 01/18/26 01:27:29 - 0:21:55 - Epoch 5
+INFO - 01/18/26 01:27:32 - 0:21:59 - Validation auc = 0.529108
+INFO - 01/18/26 01:27:33 - 0:21:59 - test auc = 0.559783
+INFO - 01/18/26 01:27:33 - 0:21:59 - Epoch 6
+INFO - 01/18/26 01:27:36 - 0:22:03 - Validation auc = 0.497052
+INFO - 01/18/26 01:27:37 - 0:22:03 - Warning: Found a task with predictions all 0s or all 1s
+INFO - 01/18/26 01:27:37 - 0:22:03 - test auc = nan
+INFO - 01/18/26 01:27:37 - 0:22:03 - Epoch 7
+INFO - 01/18/26 01:27:40 - 0:22:07 - Validation auc = 0.615052
+INFO - 01/18/26 01:27:40 - 0:22:07 - test auc = 0.678261
+INFO - 01/18/26 01:27:40 - 0:22:07 - Epoch 8
+INFO - 01/18/26 01:27:44 - 0:22:10 - Validation auc = 0.464536
+INFO - 01/18/26 01:27:44 - 0:22:11 - test auc = 0.636504
+INFO - 01/18/26 01:27:44 - 0:22:11 - Epoch 9
+INFO - 01/18/26 01:27:47 - 0:22:14 - Validation auc = 0.550295
+INFO - 01/18/26 01:27:48 - 0:22:14 - test auc = 0.552083
+INFO - 01/18/26 01:27:48 - 0:22:14 - Epoch 10
+INFO - 01/18/26 01:27:51 - 0:22:18 - Validation auc = 0.399042
+INFO - 01/18/26 01:27:52 - 0:22:18 - test auc = 0.407065
+INFO - 01/18/26 01:27:52 - 0:22:18 - Epoch 11
+INFO - 01/18/26 01:27:55 - 0:22:22 - Validation auc = 0.482038
+INFO - 01/18/26 01:27:55 - 0:22:22 - test auc = 0.626812
+INFO - 01/18/26 01:27:55 - 0:22:22 - Epoch 12
+INFO - 01/18/26 01:27:59 - 0:22:25 - Validation auc = 0.587970
+INFO - 01/18/26 01:27:59 - 0:22:26 - test auc = 0.699728
+INFO - 01/18/26 01:27:59 - 0:22:26 - Epoch 13
+INFO - 01/18/26 01:28:02 - 0:22:29 - Validation auc = 0.651805
+INFO - 01/18/26 01:28:03 - 0:22:29 - test auc = 0.709239
+INFO - 01/18/26 01:28:03 - 0:22:29 - Epoch 14
+INFO - 01/18/26 01:28:06 - 0:22:33 - Validation auc = 0.690954
+INFO - 01/18/26 01:28:07 - 0:22:33 - test auc = 0.707065
+INFO - 01/18/26 01:28:07 - 0:22:33 - Epoch 15
+INFO - 01/18/26 01:28:10 - 0:22:37 - Validation auc = 0.379053
+INFO - 01/18/26 01:28:10 - 0:22:37 - test auc = 0.407880
+INFO - 01/18/26 01:28:10 - 0:22:37 - Epoch 16
+INFO - 01/18/26 01:28:14 - 0:22:40 - Validation auc = 0.706890
+INFO - 01/18/26 01:28:14 - 0:22:41 - test auc = 0.703351
+INFO - 01/18/26 01:28:14 - 0:22:41 - Epoch 17
+INFO - 01/18/26 01:28:18 - 0:22:44 - Validation auc = 0.701271
+INFO - 01/18/26 01:28:18 - 0:22:44 - test auc = 0.693750
+INFO - 01/18/26 01:28:18 - 0:22:44 - Epoch 18
+INFO - 01/18/26 01:28:21 - 0:22:48 - Validation auc = 0.612380
+INFO - 01/18/26 01:28:21 - 0:22:48 - test auc = 0.623098
+INFO - 01/18/26 01:28:21 - 0:22:48 - Epoch 19
+INFO - 01/18/26 01:28:25 - 0:22:51 - Validation auc = 0.357590
+INFO - 01/18/26 01:28:25 - 0:22:52 - test auc = 0.364855
+INFO - 01/18/26 01:28:25 - 0:22:52 - Epoch 20
+INFO - 01/18/26 01:28:28 - 0:22:55 - Validation auc = 0.708548
+INFO - 01/18/26 01:28:29 - 0:22:55 - test auc = 0.706431
+INFO - 01/18/26 01:28:29 - 0:22:55 - Epoch 21
+INFO - 01/18/26 01:28:32 - 0:22:59 - Validation auc = 0.592852
+INFO - 01/18/26 01:28:33 - 0:22:59 - test auc = 0.593388
+INFO - 01/18/26 01:28:33 - 0:22:59 - Epoch 22
+INFO - 01/18/26 01:28:36 - 0:23:03 - Validation auc = 0.425018
+INFO - 01/18/26 01:28:36 - 0:23:03 - test auc = 0.485688
+INFO - 01/18/26 01:28:36 - 0:23:03 - Epoch 23
+INFO - 01/18/26 01:28:40 - 0:23:06 - Validation auc = 0.674558
+INFO - 01/18/26 01:28:40 - 0:23:07 - test auc = 0.674819
+INFO - 01/18/26 01:28:40 - 0:23:07 - Epoch 24
+INFO - 01/18/26 01:28:43 - 0:23:10 - Validation auc = 0.373250
+INFO - 01/18/26 01:28:44 - 0:23:10 - test auc = 0.388225
+INFO - 01/18/26 01:28:44 - 0:23:10 - Epoch 25
+INFO - 01/18/26 01:28:47 - 0:23:14 - Validation auc = 0.355380
+INFO - 01/18/26 01:28:48 - 0:23:14 - test auc = 0.378804
+INFO - 01/18/26 01:28:48 - 0:23:14 - Epoch 26
+INFO - 01/18/26 01:28:51 - 0:23:18 - Validation auc = 0.632277
+INFO - 01/18/26 01:28:52 - 0:23:18 - test auc = 0.728986
+INFO - 01/18/26 01:28:52 - 0:23:18 - Epoch 27
+INFO - 01/18/26 01:28:55 - 0:23:22 - Validation auc = 0.574797
+INFO - 01/18/26 01:28:56 - 0:23:22 - test auc = 0.675453
+INFO - 01/18/26 01:28:56 - 0:23:22 - Epoch 28
+INFO - 01/18/26 01:28:59 - 0:23:26 - Validation auc = 0.724392
+INFO - 01/18/26 01:29:00 - 0:23:26 - test auc = 0.710054
+INFO - 01/18/26 01:29:00 - 0:23:26 - Epoch 29
+INFO - 01/18/26 01:29:04 - 0:23:30 - Validation auc = 0.389001
+INFO - 01/18/26 01:29:04 - 0:23:30 - test auc = 0.377355
+INFO - 01/18/26 01:29:04 - 0:23:30 - Epoch 30
+INFO - 01/18/26 01:29:07 - 0:23:34 - Validation auc = 0.670044
+INFO - 01/18/26 01:29:08 - 0:23:34 - test auc = 0.726178
+INFO - 01/18/26 01:29:08 - 0:23:34 - Epoch 31
+INFO - 01/18/26 01:29:11 - 0:23:38 - Validation auc = 0.667649
+INFO - 01/18/26 01:29:12 - 0:23:38 - test auc = 0.703804
+INFO - 01/18/26 01:29:12 - 0:23:38 - Epoch 32
+INFO - 01/18/26 01:29:15 - 0:23:42 - Validation auc = 0.727892
+INFO - 01/18/26 01:29:15 - 0:23:42 - test auc = 0.716395
+INFO - 01/18/26 01:29:15 - 0:23:42 - Epoch 33
+INFO - 01/18/26 01:29:19 - 0:23:45 - Validation auc = 0.671518
+INFO - 01/18/26 01:29:19 - 0:23:46 - test auc = 0.661866
+INFO - 01/18/26 01:29:19 - 0:23:46 - Epoch 34
+INFO - 01/18/26 01:29:23 - 0:23:49 - Validation auc = 0.696389
+INFO - 01/18/26 01:29:23 - 0:23:50 - test auc = 0.720471
+INFO - 01/18/26 01:29:23 - 0:23:50 - Epoch 35
+INFO - 01/18/26 01:29:27 - 0:23:53 - Validation auc = 0.674374
+INFO - 01/18/26 01:29:27 - 0:23:54 - test auc = 0.707699
+INFO - 01/18/26 01:29:27 - 0:23:54 - Epoch 36
+INFO - 01/18/26 01:29:31 - 0:23:57 - Validation auc = 0.676953
+INFO - 01/18/26 01:29:31 - 0:23:57 - test auc = 0.684692
+INFO - 01/18/26 01:29:31 - 0:23:57 - Epoch 37
+INFO - 01/18/26 01:29:35 - 0:24:01 - Validation auc = 0.723102
+INFO - 01/18/26 01:29:35 - 0:24:01 - test auc = 0.725272
+INFO - 01/18/26 01:29:35 - 0:24:01 - Epoch 38
+INFO - 01/18/26 01:29:38 - 0:24:05 - Validation auc = 0.651069
+INFO - 01/18/26 01:29:39 - 0:24:05 - test auc = 0.724728
+INFO - 01/18/26 01:29:39 - 0:24:05 - Epoch 39
+INFO - 01/18/26 01:29:42 - 0:24:09 - Validation auc = 0.720155
+INFO - 01/18/26 01:29:43 - 0:24:09 - test auc = 0.713678
+INFO - 01/18/26 01:29:43 - 0:24:09 - Epoch 40
+INFO - 01/18/26 01:29:46 - 0:24:13 - Validation auc = 0.732959
+INFO - 01/18/26 01:29:46 - 0:24:13 - test auc = 0.720290
+INFO - 01/18/26 01:29:46 - 0:24:13 - Epoch 41
+INFO - 01/18/26 01:29:50 - 0:24:16 - Validation auc = 0.696389
+INFO - 01/18/26 01:29:50 - 0:24:17 - test auc = 0.748098
+INFO - 01/18/26 01:29:50 - 0:24:17 - Epoch 42
+INFO - 01/18/26 01:29:54 - 0:24:20 - Validation auc = 0.667741
+INFO - 01/18/26 01:29:54 - 0:24:20 - test auc = 0.663134
+INFO - 01/18/26 01:29:54 - 0:24:20 - Epoch 43
+INFO - 01/18/26 01:29:57 - 0:24:24 - Validation auc = 0.700166
+INFO - 01/18/26 01:29:58 - 0:24:24 - test auc = 0.708062
+INFO - 01/18/26 01:29:58 - 0:24:24 - Epoch 44
+INFO - 01/18/26 01:30:01 - 0:24:28 - Validation auc = 0.712970
+INFO - 01/18/26 01:30:02 - 0:24:28 - test auc = 0.728714
+INFO - 01/18/26 01:30:02 - 0:24:28 - Epoch 45
+INFO - 01/18/26 01:30:05 - 0:24:32 - Validation auc = 0.612012
+INFO - 01/18/26 01:30:06 - 0:24:32 - test auc = 0.661232
+INFO - 01/18/26 01:30:06 - 0:24:32 - Epoch 46
+INFO - 01/18/26 01:30:10 - 0:24:36 - Validation auc = 0.651805
+INFO - 01/18/26 01:30:10 - 0:24:37 - test auc = 0.728080
+INFO - 01/18/26 01:30:10 - 0:24:37 - Epoch 47
+INFO - 01/18/26 01:30:14 - 0:24:40 - Validation auc = 0.658069
+INFO - 01/18/26 01:30:14 - 0:24:41 - test auc = 0.726812
+INFO - 01/18/26 01:30:14 - 0:24:41 - Epoch 48
+INFO - 01/18/26 01:30:18 - 0:24:44 - Validation auc = 0.706430
+INFO - 01/18/26 01:30:18 - 0:24:44 - test auc = 0.748822
+INFO - 01/18/26 01:30:18 - 0:24:44 - Epoch 49
+INFO - 01/18/26 01:30:21 - 0:24:48 - Validation auc = 0.685151
+INFO - 01/18/26 01:30:22 - 0:24:48 - test auc = 0.756250
+INFO - 01/18/26 01:30:22 - 0:24:48 - Model 0 best validation auc = 0.732959 on epoch 40
+DEBUG - 01/18/26 01:30:22 - 0:24:48 - Moving model to cuda
+INFO - 01/18/26 01:30:22 - 0:24:49 - Model 0 test auc = 0.720290
+INFO - 01/18/26 01:30:22 - 0:24:49 - Ensemble test auc = 0.720290
+INFO - 01/18/26 01:30:22 - 0:24:49 - 
+                                     ===== KAPT Training Results =====
+INFO - 01/18/26 01:30:22 - 0:24:49 - Overall test auc = 0.720290 +/- 0.000000
+INFO - 01/18/26 01:30:22 - 0:24:49 - Overall test Class auc = 0.720290 +/- 0.000000
+DEBUG - 01/18/26 01:30:22 - 0:24:49 - Moving model to cuda
+INFO - 01/18/26 01:30:22 - 0:24:49 - Best KAPT model saved to: checkpoints\kapt_bace_best.pt
+INFO - 01/18/26 01:30:22 - 0:24:49 - 
+                                     KAPT Training Completed | Mean auc: 0.72029 +/- 0.00000
