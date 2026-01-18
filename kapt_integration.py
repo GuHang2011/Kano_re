@@ -1,26 +1,58 @@
+# KANO-main/kapt_integration.py
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from chemprop.models import MoleculeModel
-# 修复：替换不存在的 MoleculeDataLoader，改用 PyTorch 原生 DataLoader
 from chemprop.data.data import MoleculeDataset
-from torch.utils.data import DataLoader  # 核心修改：导入原生 DataLoader
+from torch.utils.data import DataLoader
 from typing import List, Dict, Optional, Tuple
 import numpy as np
+from rdkit import Chem
+from rdkit.Chem import FunctionalGroups
+from rdkit.Chem import Descriptors
+import math
+from sklearn.metrics import roc_auc_score, precision_recall_curve, auc
+from scipy.stats import ortho_group
 
+# ========== 1. 正确导入kapt_modules下的核心子模块 ==========
+from kapt_modules.dynamic_prompt_pool import DynamicPromptPool
+from kapt_modules.hierarchical_prompt_aggregator import HierarchicalPromptAggregator
+from kapt_modules.node_level_prompt_refiner import NodeLevelPromptRefiner
+from kapt_modules.structure_aware_prompt import StructureAwarePromptGenerator
 
+# ========== 2. 保留AUC优化的Focal Loss（性能核心：解决类别不平衡） ==========
+class FocalLoss(nn.Module):
+    def __init__(self, gamma=2.0, alpha=0.25, reduction='mean'):
+        super().__init__()
+        self.gamma = gamma
+        self.alpha = alpha
+        self.reduction = reduction
+
+    def forward(self, inputs, targets):
+        ce_loss = F.binary_cross_entropy_with_logits(inputs, targets, reduction='none')
+        pt = torch.exp(-ce_loss)
+        focal_loss = self.alpha * (1 - pt) ** self.gamma * ce_loss
+
+        if self.reduction == 'mean':
+            return focal_loss.mean()
+        elif self.reduction == 'sum':
+            return focal_loss.sum()
+        else:
+            return focal_loss
+
+# ========== 3. 整合KAPT核心模块（复用kapt_modules子模块） ==========
 class KAPTPromptModule(nn.Module):
-    """KAPT 提示模块：结构感知的动态提示生成器"""
-
+    """整合kapt_modules子模块 + AUC优化"""
     def __init__(
             self,
             num_tasks: int,
             node_dim: int,
-            prompt_dim: int = 128,
+            prompt_dim: int = 512,
             kg_embed_dim: int = 128,
-            num_prompts_per_task: int = 10,
-            num_heads: int = 4,
-            dropout: float = 0.1
+            num_prompts_per_task: int = 40,
+            num_heads: int = 16,
+            dropout: float = 0.02,
+            num_layers: int = 4,
     ):
         super().__init__()
         self.num_tasks = num_tasks
@@ -29,24 +61,40 @@ class KAPTPromptModule(nn.Module):
         self.kg_embed_dim = kg_embed_dim
         self.num_prompts_per_task = num_prompts_per_task
 
-        # 任务特定提示池
-        self.task_prompt_pool = nn.Parameter(
-            torch.randn(num_tasks, num_prompts_per_task, prompt_dim)
+        # ===== 直接调用kapt_modules下的4个子模块 =====
+        self.dpp = DynamicPromptPool(
+            num_tasks=num_tasks,
+            prompt_dim=prompt_dim,
+            num_prompts_per_task=num_prompts_per_task
         )
-
-        # 功能团-提示注意力融合层
-        self.cross_attention = nn.MultiheadAttention(
-            embed_dim=prompt_dim,
+        self.spg = StructureAwarePromptGenerator(
+            prompt_dim=prompt_dim,
+            kg_embed_dim=kg_embed_dim,
             num_heads=num_heads,
-            dropout=dropout,
-            batch_first=True
+            dropout=dropout
+        )
+        self.hpa = HierarchicalPromptAggregator(
+            prompt_dim=prompt_dim,
+            task_embed_dim=prompt_dim
+        )
+        self.nlpr = NodeLevelPromptRefiner(
+            node_dim=node_dim,
+            prompt_dim=prompt_dim,
+            kg_embed_dim=kg_embed_dim
         )
 
-        # 节点特征投影层（对齐节点维度与提示维度）
-        self.node_projection = nn.Linear(node_dim, prompt_dim)
-        # 输出投影层（融合后投影回节点维度）
-        self.output_projection = nn.Linear(prompt_dim, node_dim)
-
+        # 保留AUC优化的投影/融合层（提升分类区分度）
+        self.gate_fusion = nn.Sequential(
+            nn.Linear(prompt_dim * 2, prompt_dim),
+            nn.Sigmoid()
+        )
+        self.output_projection = nn.Sequential(
+            nn.Linear(prompt_dim, node_dim * 2),
+            nn.ReLU(),
+            nn.LayerNorm(node_dim * 2),
+            nn.Linear(node_dim * 2, node_dim),
+            nn.LayerNorm(node_dim)
+        )
         self.dropout = nn.Dropout(dropout)
         self.layer_norm = nn.LayerNorm(prompt_dim)
 
@@ -57,74 +105,65 @@ class KAPTPromptModule(nn.Module):
             fg_embeddings: torch.Tensor,
             fg_mask: Optional[torch.Tensor] = None
     ) -> Tuple[torch.Tensor, Dict]:
-        """
-        生成动态提示并增强节点特征
-        Args:
-            task_id: 当前任务ID
-            node_features: 原始节点特征 [B, N, node_dim]
-            fg_embeddings: 功能团知识图谱嵌入 [B, G, kg_embed_dim]
-            fg_mask: 功能团掩码 [B, G]（标记有效功能团）
-        Returns:
-            enhanced_node_features: 增强后的节点特征 [B, N, node_dim]
-            prompt_info: 提示模块中间信息（用于调试）
-        """
         B, N, _ = node_features.shape
 
-        # 1. 获取当前任务的提示候选集 [num_prompts_per_task, prompt_dim]
-        task_prompts = self.task_prompt_pool[task_id]  # [P, D]
-        P = task_prompts.shape[0]
+        # Step 1: 调用DPP（动态提示池）
+        task_prompt, task_attn_weights = self.dpp(task_id)
+        task_prompts_expanded = task_prompt.unsqueeze(0).expand(B, -1, -1)
 
-        # 2. 功能团嵌入投影到提示维度 [B, G, D]
-        fg_proj = F.linear(fg_embeddings, torch.randn(self.kg_embed_dim, self.prompt_dim, device=fg_embeddings.device))
+        # Step 2: 调用SPG（结构感知提示生成）
+        struct_prompt, struct_attn_weights = self.spg(fg_embeddings, mask=fg_mask)
+        struct_prompt_expanded = struct_prompt.unsqueeze(0).expand(B, -1, -1)
 
-        # 3. 交叉注意力：功能团引导的提示选择与融合
-        # 调整维度：task_prompts -> [1, P, D]（batch维度扩展）
-        task_prompts_expanded = task_prompts.unsqueeze(0).expand(B, -1, -1)  # [B, P, D]
-        attn_output, attn_weights = self.cross_attention(
-            query=task_prompts_expanded,
-            key=fg_proj,
-            value=fg_proj,
-            key_padding_mask=fg_mask
+        # Step 3: 调用HPA（层次提示聚合）
+        if not isinstance(task_id, torch.Tensor):
+            task_id = torch.tensor([task_id], device=node_features.device)
+        if task_id.dim() == 0:
+            task_id = task_id.unsqueeze(0)
+        task_embed = self.dpp.task_embedding(task_id)
+        fused_prompt, fusion_weights = self.hpa(task_prompts_expanded, struct_prompt_expanded, task_embed)
+
+        # Step 4: 调用NLPR（节点级提示细化）
+        refined_features, node_fg_weights = self.nlpr(
+            node_features, fg_embeddings, fused_prompt, fg_mask
         )
 
-        # 4. 提示精炼：层归一化 + 残差连接
-        refined_prompts = self.layer_norm(attn_output + task_prompts_expanded)
-        refined_prompts = self.dropout(refined_prompts)  # [B, P, D]
+        # 保留AUC优化的门控融合（提升特征区分度）
+        node_features_proj = self.nlpr.node_projection(node_features)
+        concat_feat = torch.cat([node_features_proj, refined_features], dim=-1)
+        gate_weight = self.gate_fusion(concat_feat)
+        temperature = 0.3  # 放大分类特征差异
+        gate_weight = torch.sigmoid(gate_weight / temperature)
+        fused_feat = gate_weight * refined_features + (1 - gate_weight) * node_features_proj
+        enhanced_node_features = self.output_projection(self.dropout(fused_feat))
 
-        # 5. 节点特征与提示融合
-        node_features_proj = self.node_projection(node_features)  # [B, N, D]
-        # 提示池与节点特征的注意力融合
-        node_prompt_attn = torch.matmul(node_features_proj, refined_prompts.transpose(1, 2))  # [B, N, P]
-        node_prompt_attn = F.softmax(node_prompt_attn, dim=-1)  # [B, N, P]
-
-        # 动态提示生成：节点特定提示 [B, N, D]
-        node_specific_prompts = torch.matmul(node_prompt_attn, refined_prompts)
-
-        # 6. 增强节点特征
-        enhanced_node_features = self.output_projection(
-            self.dropout(node_features_proj + node_specific_prompts)
-        )  # [B, N, node_dim]
-
+        # 收集中间信息（便于调试/监控）
         prompt_info = {
-            'task_prompts': task_prompts,
-            'attn_weights': attn_weights,
-            'node_prompt_attn': node_prompt_attn
+            'task_prompt': task_prompt,
+            'struct_prompt': struct_prompt,
+            'fused_prompt': fused_prompt,
+            'task_attention': task_attn_weights,
+            'struct_attention': struct_attn_weights,
+            'fusion_weights': fusion_weights,
+            'node_fg_weights': node_fg_weights,
+            'gate_weight': gate_weight
         }
 
         return enhanced_node_features, prompt_info
 
-
+# ========== 4. 整合KAPT增强模型（性能核心：参数冻结+梯度检查点） ==========
 class KAPTEnhancedModel(nn.Module):
-    """集成 KAPT 提示模块的增强型分子属性预测模型"""
-
     def __init__(
             self,
             kano_model: MoleculeModel,
             num_tasks: int,
             node_dim: int,
-            prompt_dim: int = 128,
+            prompt_dim: int = 512,
             kg_embed_dim: int = 128,
+            kg_embed_path: str = "initial/elementkgontology.embeddings.txt",
             use_prompt: bool = True,
+            use_gradient_checkpointing: bool = True,
+            pos_weight: float = 2.0,
             **prompt_kwargs
     ):
         super().__init__()
@@ -132,142 +171,96 @@ class KAPTEnhancedModel(nn.Module):
         self.kano_model = kano_model
         self.use_prompt = use_prompt
         self.node_dim = node_dim
-        self.kg_embed_dim = kg_embed_dim
+        self.pos_weight = pos_weight  # 正负样本权重
 
-        # 初始化 KAPT 提示模块
+        # 性能优化1：冻结主干模型（仅微调输出层+KAPT）
+        for name, param in self.kano_model.named_parameters():
+            if 'ffn' not in name and 'output' not in name:
+                param.requires_grad = False
+
+        # 加载功能团嵌入（归一化，提升稳定性）
+        self.kg_embedding_dict = self._load_elementkg_embeddings(kg_embed_path)
+        self.default_fg_embed = F.normalize(torch.randn(kg_embed_dim), p=2, dim=0)
+
+        # 初始化KAPT提示模块（调用kapt_modules）
+        self.prompt_module = None
         if self.use_prompt:
             self.prompt_module = KAPTPromptModule(
                 num_tasks=num_tasks,
                 node_dim=node_dim,
                 prompt_dim=prompt_dim,
-                kg_embed_dim=kg_embed_dim, **prompt_kwargs
+                kg_embed_dim=kg_embed_dim,** prompt_kwargs
             )
-        else:
-            self.prompt_module = None
+            # 性能优化2：梯度检查点（节省显存，提升大批次训练能力）
+            if use_gradient_checkpointing and self.prompt_module is not None:
+                self.prompt_module.spg.attention_layer = torch.utils.checkpoint.checkpoint_sequential(
+                    [self.prompt_module.spg.attention_layer], 1, use_reentrant=False
+                )
+                self.prompt_module.attention_layers = torch.utils.checkpoint.checkpoint_sequential(
+                    list(self.prompt_module.attention_layers), 1, use_reentrant=False
+                )
 
-    def forward(
-            self,
-            batch,
-            task_id: int,
-            fg_embeddings: Optional[torch.Tensor] = None,
-            fg_mask: Optional[torch.Tensor] = None,
-            return_prompt_info: bool = False
-    ):
-        """
-        前向传播：先增强节点特征，再通过 KANO 模型预测
-        Args:
-            batch: DataLoader 的 batch 数据（原 MoleculeDataLoader 替换为原生 DataLoader）
-            task_id: 当前任务ID
-            fg_embeddings: 功能团知识图谱嵌入 [B, G, kg_embed_dim]
-            fg_mask: 功能团掩码 [B, G]
-            return_prompt_info: 是否返回提示信息
-        Returns:
-            predictions: 预测结果
-            prompt_info (optional): 提示模块中间信息
-        """
-        # 1. 获取 KANO 的原始节点特征（GNN 编码前）
-        node_features = self.kano_model.encoder.get_node_features(batch)  # [B, N, node_dim]
+        # 性能优化3：分类任务专用输出头（AUC优化）
+        self.task_output_heads = nn.ModuleList([
+            nn.Sequential(
+                nn.Linear(node_dim, node_dim),
+                nn.ReLU(),
+                nn.LayerNorm(node_dim),
+                nn.Linear(node_dim, 1),
+                nn.Sigmoid()
+            ) for _ in range(num_tasks)
+        ])
+        self.focal_loss = FocalLoss(gamma=2.0, alpha=0.25)  # 解决类别不平衡
 
-        # 2. KAPT 提示增强
-        prompt_info = None
+    def _load_elementkg_embeddings(self, kg_embed_path: str) -> Dict[str, torch.Tensor]:
+        """加载功能团嵌入（归一化，提升稳定性）"""
+        kg_embeddings = {}
+        try:
+            with open(kg_embed_path, 'r', encoding='utf-8') as f:
+                lines = f.readlines()
+                for line in lines[1:]:
+                    parts = line.strip().split()
+                    if len(parts) < self.kg_embed_dim + 1:
+                        continue
+                    fg_name = parts[0].lower()
+                    embed_vec = torch.tensor([float(x) for x in parts[1:1 + self.kg_embed_dim]], dtype=torch.float32)
+                    embed_vec = F.normalize(embed_vec, p=2, dim=0)
+                    kg_embeddings[fg_name] = embed_vec
+            print(f"成功加载ElementKG嵌入：共{len(kg_embeddings)}个功能团")
+        except FileNotFoundError:
+            raise ValueError(f"ElementKG嵌入文件未找到：{kg_embed_path}")
+        return kg_embeddings
+
+    def forward(self, batch, task_id: int = 0) -> Tuple[torch.Tensor, Dict]:
+        """适配chemprop训练流程的前向传播"""
+        # 1. 提取基础模型输入
+        node_features = batch.node_features
+        fg_embeddings = batch.fg_embeddings  # 需确保数据加载时包含功能团嵌入
+        fg_mask = batch.fg_mask if hasattr(batch, 'fg_mask') else None
+
+        # 2. 调用KAPT提示模块增强节点特征
         if self.use_prompt and self.prompt_module is not None:
-            if fg_embeddings is None:
-                fg_embeddings, fg_mask = self._extract_functional_groups(batch)
-
-            node_features, prompt_info = self.prompt_module(
+            enhanced_node_features, prompt_info = self.prompt_module(
                 task_id=task_id,
                 node_features=node_features,
                 fg_embeddings=fg_embeddings,
                 fg_mask=fg_mask
             )
+        else:
+            enhanced_node_features = node_features
+            prompt_info = {}
 
-        # 3. 替换 KANO 的节点特征，执行后续预测
-        batch.node_features = node_features
-        predictions = self.kano_model(batch)
+        # 3. 基础模型前向传播
+        batch.node_features = enhanced_node_features
+        base_output = self.kano_model(batch)
 
-        if return_prompt_info:
-            return predictions, prompt_info
-        return predictions
+        # 4. 分类任务输出（AUC优化）
+        task_output = self.task_output_heads[task_id](base_output)
+        return task_output, prompt_info
 
-    def _extract_functional_groups(self, batch) -> Tuple[torch.Tensor, torch.Tensor]:
-        """
-        从 batch 中提取功能团嵌入和掩码（对接 KANO 的 ElementKG）
-        Args:
-            batch: DataLoader 输出的 batch 数据
-        Returns:
-            fg_embeddings: [B, G, kg_embed_dim] 功能团嵌入
-            fg_mask: [B, G] 掩码（True 表示无效功能团）
-        """
-        batch_size = len(batch)
-        max_num_groups = 6  # KANO 中默认最大功能团数量
-
-        # 从 ElementKG 加载预训练功能团嵌入（占位符，需替换为真实逻辑）
-        fg_embeddings = torch.randn(
-            batch_size, max_num_groups, self.kg_embed_dim,
-            device=batch.x.device
-        )
-
-        # 生成功能团掩码（模拟部分分子功能团数量不足）
-        fg_mask = torch.rand(batch_size, max_num_groups, device=batch.x.device) > 0.8
-
-        return fg_embeddings, fg_mask
-
-
-# 核心修改：函数参数中的 MoleculeDataLoader 替换为 DataLoader
-def train_with_kapt(
-        model: KAPTEnhancedModel,
-        data_loader: DataLoader,  # 替换 MoleculeDataLoader -> DataLoader
-        optimizer: torch.optim.Optimizer,
-        task_id: int,
-        device: torch.device,
-        loss_func: nn.Module
-) -> float:
-    """使用 KAPT 提示模块的训练函数"""
-    model.train()
-    total_loss = 0.0
-    num_batches = 0
-
-    for batch in data_loader:
-        batch = batch.to(device)
-        optimizer.zero_grad()
-
-        # 前向传播（自动提取功能团嵌入）
-        predictions = model(batch=batch, task_id=task_id)
-
-        # 计算损失（适配 KANO 原有损失函数）
-        loss = loss_func(predictions, batch.targets)
-        loss.backward()
-        optimizer.step()
-
-        total_loss += loss.item()
-        num_batches += 1
-
-    return total_loss / num_batches
-
-
-# 核心修改：函数参数中的 MoleculeDataLoader 替换为 DataLoader
-def evaluate_with_kapt(
-        model: KAPTEnhancedModel,
-        data_loader: DataLoader,  # 替换 MoleculeDataLoader -> DataLoader
-        task_id: int,
-        device: torch.device,
-        metric_func
-) -> float:
-    """使用 KAPT 提示模块的评估函数"""
-    model.eval()
-    all_preds = []
-    all_targets = []
-
-    with torch.no_grad():
-        for batch in data_loader:
-            batch = batch.to(device)
-            predictions = model(batch=batch, task_id=task_id)
-
-            all_preds.append(predictions.cpu().numpy())
-            all_targets.append(batch.targets.cpu().numpy())
-
-    # 合并结果并计算指标
-    all_preds = np.concatenate(all_preds, axis=0)
-    all_targets = np.concatenate(all_targets, axis=0)
-
-    return metric_func(all_targets, all_preds)
+    def calculate_loss(self, outputs, targets) -> torch.Tensor:
+        """性能优化4：使用Focal Loss提升AUC"""
+        targets = targets.float()
+        # 标签平滑（降低过拟合）
+        targets = (1 - self.label_smoothing) * targets + self.label_smoothing * 0.5
+        return self.focal_loss(outputs.squeeze(), targets)
