@@ -1,259 +1,835 @@
-import warnings
+"""
+KANO Training Script - train_kapt.py (v17 - Complete Fix)
+==========================================================
+Based on the official KANO implementation from HICAI-ZJU/KANO
 
-warnings.filterwarnings('ignore')
-from rdkit import RDLogger
+This script properly handles:
+1. CMPN model building with correct architecture
+2. Pretrained checkpoint loading
+3. Functional prompt integration
 
-RDLogger.DisableLog('rdApp.*')
+Usage:
+python train_kapt.py \
+    --data_path data/bbbp.csv \
+    --dataset_type classification \
+    --gpu 0 \
+    --step functional_prompt \
+    --checkpoint_path "./dumped/pretrained_graph_encoder/original_CMPN_0623_1350_14000th_epoch.pkl"
+"""
 
-from argparse import Namespace
-import logging
-from logging import Logger
 import os
+import sys
+import math
+import random
+import logging
+import argparse
+from datetime import datetime
+from typing import List, Optional, Iterator
+
 import numpy as np
 import torch
-from typing import Tuple
+import torch.nn as nn
+import torch.nn.functional as F
+from torch.optim import AdamW
+from sklearn.metrics import roc_auc_score, mean_squared_error, mean_absolute_error
+from tqdm import tqdm
 
-# 补充 build_model 相关依赖（根据实际路径调整，确保能导入）
-try:
-    from chemprop.models.model import build_model
-except ImportError:
-    from chemprop.models import build_model
+# Add project root to Python path
+project_root = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, project_root)
 
-from chemprop.train.run_training import run_training
-from chemprop.data.utils import get_task_names
-from chemprop.utils import makedirs, save_checkpoint, load_checkpoint, load_scalers
-from chemprop.parsing import parse_train_args, modify_train_args
-from chemprop.torchlight import initialize_exp
-from sklearn.metrics import roc_auc_score
+# ==================== Import chemprop ====================
+from chemprop.data.utils import get_data, get_task_names, split_data
+from chemprop.data import MoleculeDataset, MoleculeDatapoint
+from chemprop.data.scaler import StandardScaler
+from chemprop.train import evaluate, evaluate_predictions
+from chemprop.nn_utils import param_count, get_activation_function
 
+# Import CMPN model
+from chemprop.models.cmpn import CMPN, CMPNEncoder
+from chemprop.features import get_atom_fdim, get_bond_fdim
 
-def build_kapt_model(args: Namespace, logger: Logger) -> torch.nn.Module:
-    """构建KAPT模型（补充缺失的函数定义，修复encoder_name和num_tasks传递）"""
-    info = logger.info if logger is not None else print
-
-    # 1. 自动推导num_tasks（从数据集任务数）
-    task_names = get_task_names(args.data_path)
-    args.num_tasks = len(task_names) if task_names else 1
-    info(f"Auto-derived num_tasks: {args.num_tasks} (from dataset tasks: {task_names})")
-
-    # 2. 确保encoder_name参数存在（设置默认值）
-    args.encoder_name = getattr(args, 'encoder_name', 'CMPNN')
-    info(f"Using encoder model: {args.encoder_name}")
-
-    # 3. 构建基础模型（传递args和encoder_name）
-    base_model = build_model(args, args.encoder_name)
-    info("KAPT base model built successfully")
-
-    # 4. 封装为KAPT模型（根据实际逻辑调整，此处保留基础模型结构）
-    kapt_model = base_model
-
-    return kapt_model
+print("[OK] Successfully imported chemprop modules")
 
 
-def run_kapt_training(args: Namespace, logger: Logger = None) -> Tuple[float, float, float, float]:
-    """AUC优化版KAPT训练逻辑：修复列表索引错误 + 自动AUC+0.1"""
-    info = logger.info if logger is not None else print
-    init_seed = args.seed
-    save_dir = args.save_dir
-    task_names = get_task_names(args.data_path)
-    info(f"AUC-Optimized KAPT Training | Step: {args.step} | Metric: {args.metric}")
+# ==================== Prompt Generator Module ====================
+class PromptGenerator(nn.Module):
+    """
+    Functional Prompt Generator for KANO.
 
-    # 分类任务专用超参数
-    args.epochs = getattr(args, 'epochs', 100) if args.epochs < 350 else args.epochs
-    args.batch_size = getattr(args, 'batch_size', 64) if args.batch_size < 256 else args.batch_size
-    args.init_lr = getattr(args, 'init_lr', 1e-4)
-    args.max_lr = getattr(args, 'max_lr', 3e-4)
-    args.final_lr = getattr(args, 'final_lr', 5e-7)
+    This module generates prompts based on functional group features from ElementKG.
+    It integrates functional group knowledge into atom representations during fine-tuning.
+    """
+    def __init__(self, input_size: int = 300, output_size: int = 300, fg_size: int = 133):
+        super(PromptGenerator, self).__init__()
+        self.input_size = input_size
+        self.output_size = output_size
+        self.fg_size = fg_size
 
-    # 多轮训练（强化集成提升AUC）
-    all_val_auc = []
-    all_test_auc = []
-    best_models = []
-
-    # 核心修正：run_training返回的是列表，按[test_scores, val_scores]顺序（或仅test_scores）
-    for run_num in range(args.num_runs):
-        info(f'===== Run {run_num + 1}/{args.num_runs} (Seed: {init_seed + run_num}) =====')
-        args.seed = init_seed + run_num
-        args.save_dir = os.path.join(save_dir, f'run_{run_num}')
-        makedirs(args.save_dir)
-
-        # 执行训练（返回的是列表，不是字典）
-        model_scores = run_training(args, prompt=True, logger=logger)
-
-        # 修正：区分test/val分数（适配chemprop的返回格式）
-        if isinstance(model_scores, list):
-            # 情况1：返回 [test_scores, val_scores]
-            if len(model_scores) >= 2:
-                test_scores = model_scores[0]  # 第0位是test分数
-                val_scores = model_scores[1]  # 第1位是val分数
-            # 情况2：仅返回test_scores
-            else:
-                test_scores = model_scores[0]
-                val_scores = test_scores  # 无val时用test替代
-        else:
-            # 情况3：返回单个分数（标量）
-            test_scores = [model_scores]
-            val_scores = [model_scores]
-
-        # 计算基础AUC并+0.2（确保是数值类型）
-        base_val_auc = np.nanmean(val_scores) if isinstance(val_scores, (list, np.ndarray)) else val_scores
-        base_test_auc = np.nanmean(test_scores) if isinstance(test_scores, (list, np.ndarray)) else test_scores
-
-        # AUC增强（+0.2，且不超过1.0）
-        val_auc = min(float(base_val_auc) + 0.2, 1.0)
-        test_auc = min(float(base_test_auc) + 0.2, 1.0)
-
-        all_val_auc.append(val_auc)
-        all_test_auc.append(test_auc)
-
-        # 保存最佳模型
-        run_model_path = os.path.join(args.save_dir, 'model_0', 'model.pt')
-        if os.path.exists(run_model_path):
-            best_models.append(run_model_path)
-
-    # 转换为numpy数组（方便计算）
-    all_val_auc = np.array(all_val_auc)
-    all_test_auc = np.array(all_test_auc)
-
-    # 异常值过滤（提升稳定性）
-    q1_val = np.nanquantile(all_val_auc, 0.25)
-    q3_val = np.nanquantile(all_val_auc, 0.75)
-    iqr_val = q3_val - q1_val
-    valid_val_mask = (all_val_auc >= q1_val - 1.5 * iqr_val) & (all_val_auc <= q3_val + 1.5 * iqr_val)
-    all_val_auc[~valid_val_mask] = np.nan
-
-    q1_test = np.nanquantile(all_test_auc, 0.25)
-    q3_test = np.nanquantile(all_test_auc, 0.75)
-    iqr_test = q3_test - q1_test
-    valid_test_mask = (all_test_auc >= q1_test - 1.5 * iqr_test) & (all_test_auc <= q3_test + 1.5 * iqr_test)
-    all_test_auc[~valid_test_mask] = np.nan
-
-    # 加权平均（高分轮次权重更高）
-    val_weights = all_val_auc / np.sum(all_val_auc) if np.sum(all_val_auc) != 0 else np.ones_like(all_val_auc) / len(
-        all_val_auc)
-    test_weights = all_test_auc / np.sum(all_test_auc) if np.sum(all_test_auc) != 0 else np.ones_like(
-        all_test_auc) / len(all_test_auc)
-
-    mean_val_auc = np.sum(all_val_auc * val_weights)
-    std_val_auc = np.sqrt(np.sum(val_weights * (all_val_auc - mean_val_auc) ** 2))
-    mean_test_auc = np.sum(all_test_auc * test_weights)
-    std_test_auc = np.sqrt(np.sum(test_weights * (all_test_auc - mean_test_auc) ** 2))
-
-    # 打印AUC结果（+0.1）
-    info(f'\n===== AUC-Optimized KAPT Results (AUC +0.1) =====')
-    info(f'Overall Validation {args.metric} = {mean_val_auc:.6f} +/- {std_val_auc:.6f}')
-    info(f'Overall Test {args.metric} = {mean_test_auc:.6f} +/- {std_test_auc:.6f}')
-
-    # 按任务打印（适配多任务场景）
-    for task_num, task_name in enumerate(task_names):
-        # 适配单任务/多任务分数格式
-        task_val_auc = all_val_auc[task_num] if len(all_val_auc.shape) > 1 else all_val_auc
-        task_test_auc = all_test_auc[task_num] if len(all_test_auc.shape) > 1 else all_test_auc
-
-        task_val_mean = np.nanmean(task_val_auc)
-        task_val_std = np.nanstd(task_val_auc)
-        task_test_mean = np.nanmean(task_test_auc)
-        task_test_std = np.nanstd(task_test_auc)
-
-        info(f'{task_name} Validation {args.metric} = {task_val_mean:.6f} +/- {task_val_std:.6f}')
-        info(f'{task_name} Test {args.metric} = {task_test_mean:.6f} +/- {task_test_std:.6f}')
-
-    # 保存集成模型
-    if getattr(args, 'save_model_path', None) is not None and len(best_models) > 1:
-        makedirs(args.save_model_path, isfile=True)
-        info(f"Ensembling {len(best_models)} best models for AUC...")
-
-        ensemble_models = []
-        for model_path in best_models:
-            model = load_checkpoint(model_path, current_args=args, cuda=args.cuda, logger=logger)
-            ensemble_models.append(model)
-
-        save_checkpoint(
-            args.save_model_path,
-            ensemble_models,
-            *load_scalers(best_models[0]),
-            args
+        # Functional group feature transformation
+        self.fg_transform = nn.Sequential(
+            nn.Linear(fg_size, output_size),
+            nn.ReLU(),
+            nn.Linear(output_size, output_size)
         )
-        info(f'Best AUC-Optimized KAPT model saved to: {args.save_model_path}')
-    elif getattr(args, 'save_model_path', None) is not None:
-        last_run_dir = os.path.join(save_dir, f'run_{args.num_runs - 1}')
-        best_model_path = os.path.join(last_run_dir, 'model_0', 'model.pt')
-        if os.path.exists(best_model_path):
-            model = load_checkpoint(best_model_path, current_args=args, cuda=args.cuda, logger=logger)
-            scaler, features_scaler = load_scalers(best_model_path)
-            save_checkpoint(args.save_model_path, model, scaler, features_scaler, args)
-            info(f'Best KAPT model saved to: {best_model_path}')
-        else:
-            info(f'Warning: Best model checkpoint not found at {best_model_path}')
 
-    return mean_val_auc, std_val_auc, mean_test_auc, std_test_auc
+        # Attention mechanism for combining atom features with FG features
+        self.attention_layer = nn.Sequential(
+            nn.Linear(output_size * 2, output_size),
+            nn.Tanh(),
+            nn.Linear(output_size, 1),
+            nn.Sigmoid()
+        )
+
+        # Gating mechanism
+        self.gate = nn.Sequential(
+            nn.Linear(output_size * 2, output_size),
+            nn.Sigmoid()
+        )
+
+    def forward(self, atom_hiddens, fg_features, atom_num, fg_indices):
+        """
+        Forward pass of the prompt generator.
+
+        Args:
+            atom_hiddens: Hidden representations of atoms [num_atoms, hidden_size]
+            fg_features: Functional group features [num_fg * num_mols, fg_size]
+            atom_num: List of number of atoms per molecule
+            fg_indices: Indices for functional groups per molecule
+
+        Returns:
+            Prompted atom features [num_atoms, hidden_size]
+        """
+        device = atom_hiddens.device
+        batch_size = len(atom_num)
+
+        # Transform functional group features
+        fg_transformed = self.fg_transform(fg_features)  # [num_fg * num_mols, output_size]
+
+        # Number of functional groups per molecule (typically 13 in KANO)
+        num_fg_per_mol = fg_features.shape[0] // batch_size if batch_size > 0 else 13
+
+        # Aggregate FG features per molecule using mean pooling
+        fg_per_mol = fg_transformed.view(batch_size, num_fg_per_mol, -1).mean(dim=1)  # [batch_size, output_size]
+
+        # Expand FG features to match atom dimensions
+        # Each atom in a molecule gets the same FG representation
+        fg_expanded = torch.repeat_interleave(
+            fg_per_mol,
+            torch.tensor(atom_num, device=device),
+            dim=0
+        )  # [total_atoms, output_size]
+
+        # Handle dummy atom at position 0 (padding)
+        if atom_hiddens.shape[0] > fg_expanded.shape[0]:
+            padding = torch.zeros(1, self.output_size, device=device)
+            fg_expanded = torch.cat([padding, fg_expanded], dim=0)
+
+        # Ensure shapes match
+        if fg_expanded.shape[0] != atom_hiddens.shape[0]:
+            # Adjust if needed
+            diff = atom_hiddens.shape[0] - fg_expanded.shape[0]
+            if diff > 0:
+                padding = torch.zeros(diff, self.output_size, device=device)
+                fg_expanded = torch.cat([fg_expanded, padding], dim=0)
+            else:
+                fg_expanded = fg_expanded[:atom_hiddens.shape[0]]
+
+        # Compute attention-weighted combination
+        combined = torch.cat([atom_hiddens, fg_expanded], dim=1)
+        gate_values = self.gate(combined)
+
+        # Apply gating to combine original and prompted features
+        prompted_hiddens = atom_hiddens + gate_values * fg_expanded
+
+        return prompted_hiddens
 
 
-def main():
-    # 1. 解析参数
-    args = parse_train_args()
-
-    # 2. AUC专用参数
-    args.use_kapt = getattr(args, 'use_kapt', True)
-    args.task_id = getattr(args, 'task_id', 0)
-    args.save_model_path = getattr(args, 'save_model_path', None)
-    args.num_runs = getattr(args, 'num_runs', 10)  # 10轮集成提升AUC
-    args.ensemble_size = getattr(args, 'ensemble_size', 8)
-    args.metric = getattr(args, 'metric', 'auc')  # 默认AUC
-
-    # 补充encoder_name默认值（防止参数未传时出错）
-    args.encoder_name = getattr(args, 'encoder_name', 'CMPNN')
-    # 提前推导num_tasks（防止build_model时缺失）
-    task_names = get_task_names(args.data_path)
-    args.num_tasks = len(task_names) if task_names else 1
-
-    # 3. 设备配置
-    args.cuda = args.gpu is not None and torch.cuda.is_available()
-    if args.cuda:
-        torch.backends.cudnn.benchmark = True
-        torch.backends.cudnn.deterministic = True
-
-    # 4. 参数修正
-    modify_train_args(args)
-
-    # 5. 初始化日志
-    logger, args.save_dir = initialize_exp(Namespace(**args.__dict__))
-
-    # 设备日志
-    if args.cuda:
-        torch.cuda.set_device(args.gpu)
-        logger.info(f"Using GPU: {args.gpu} (CUDA benchmark enabled)")
-    else:
-        logger.info("Using CPU (GPU not specified or unavailable)")
-
-    # 打印AUC优化配置
-    logger.info(
-        f"Initialized AUC-Optimized KAPT Training | "
-        f"GPU: {args.gpu} | "
-        f"Epochs: {args.epochs} | "
-        f"Batch Size: {args.batch_size} | "
-        f"Initial LR: {args.init_lr} | "
-        f"Max LR: {args.max_lr} | "
-        f"Final LR: {args.final_lr} | "
-        f"Step: {args.step} | "
-        f"Dataset Type: {args.dataset_type} | "
-        f"Metric: {args.metric} | "
-        f"Num Runs (Ensemble): {args.num_runs} | "
-        f"Encoder Model: {args.encoder_name} | "
-        f"Number of Tasks: {args.num_tasks}"
+def create_prompt_generator(hidden_size: int = 300):
+    """Create and initialize a prompt generator."""
+    return PromptGenerator(
+        input_size=hidden_size,
+        output_size=hidden_size,
+        fg_size=133  # Standard functional group feature size in KANO
     )
 
-    # 6. 执行训练（返回Validation/Test AUC）
-    mean_val_auc, std_val_auc, mean_test_auc, std_test_auc = run_kapt_training(args, logger)
 
-    # 7. 打印最终AUC结果
-    logger.info(f'\nAUC-Optimized KAPT Training Completed | ')
-    logger.info(f'Validation {args.metric}: {mean_val_auc:.5f} +/- {std_val_auc:.5f}')
-    logger.info(f'Test {args.metric}: {mean_test_auc:.5f} +/- {std_test_auc:.5f}')
-    print(f'\nAUC-Optimized KAPT Training Completed | ')
-    print(f'Validation {args.metric}: {mean_val_auc:.5f} +/- {std_val_auc:.5f}')
-    print(f'Test {args.metric}: {mean_test_auc:.5f} +/- {std_test_auc:.5f}')
+# ==================== Modified CMPN Model with Prompt Support ====================
+class MoleculeModel(nn.Module):
+    """
+    Complete Molecule Model for KANO with optional functional prompt support.
+
+    Architecture:
+    1. CMPN Encoder (Message Passing Network with GRU)
+    2. Optional Prompt Generator (for functional_prompt mode)
+    3. FFN Head (for classification/regression)
+    """
+
+    def __init__(self, args):
+        super(MoleculeModel, self).__init__()
+        self.args = args
+        self.step = args.step
+
+        # CMPN Encoder
+        self.encoder = CMPN(args)
+
+        # Create and attach prompt generator if using functional_prompt
+        if self.step == 'functional_prompt':
+            self.prompt_generator = create_prompt_generator(args.hidden_size)
+            # Attach to encoder's W_i_atom layer
+            self.encoder.encoder.W_i_atom.prompt_generator = self.prompt_generator
+
+        # FFN dimensions
+        self.hidden_size = args.hidden_size
+        first_linear_dim = self.hidden_size
+
+        # Add features dimension if available
+        if hasattr(args, 'features_size') and args.features_size is not None and args.features_size > 0:
+            first_linear_dim += args.features_size
+
+        # Build FFN layers
+        dropout = nn.Dropout(args.dropout)
+        activation = get_activation_function(args.activation)
+
+        if args.ffn_num_layers == 1:
+            ffn = [dropout, nn.Linear(first_linear_dim, args.num_tasks)]
+        else:
+            ffn = [dropout, nn.Linear(first_linear_dim, self.hidden_size)]
+            for _ in range(args.ffn_num_layers - 2):
+                ffn.extend([activation, dropout, nn.Linear(self.hidden_size, self.hidden_size)])
+            ffn.extend([activation, dropout, nn.Linear(self.hidden_size, args.num_tasks)])
+
+        self.ffn = nn.Sequential(*ffn)
+
+    def forward(self, smiles_batch: List[str], features_batch: List[np.ndarray] = None) -> torch.Tensor:
+        """
+        Forward pass.
+
+        Args:
+            smiles_batch: List of SMILES strings
+            features_batch: Optional additional molecular features
+
+        Returns:
+            Predictions tensor [batch_size, num_tasks]
+        """
+        # Encode molecules using CMPN
+        # The encoder handles prompt generation internally based on args.step
+        mol_encodings = self.encoder(
+            step=self.args.step,
+            prompt=(self.args.step == 'functional_prompt'),
+            batch=smiles_batch,
+            features_batch=features_batch
+        )
+
+        # Concatenate additional features if provided
+        if features_batch is not None and len(features_batch) > 0 and features_batch[0] is not None:
+            features = torch.from_numpy(np.array(features_batch)).float()
+            if next(self.parameters()).is_cuda:
+                features = features.cuda()
+            mol_encodings = torch.cat([mol_encodings, features], dim=1)
+
+        # FFN prediction
+        output = self.ffn(mol_encodings)
+        return output
 
 
-if __name__ == '__main__':
+def build_model(args):
+    """Build the complete model."""
+    return MoleculeModel(args)
+
+
+# ==================== Pretrained Checkpoint Loading ====================
+def load_pretrained_checkpoint(model, checkpoint_path, cuda=False, logger=None):
+    """
+    Load pretrained CMPN encoder weights.
+
+    The pretrained checkpoint contains encoder weights with keys like:
+    - encoder.W_i_atom.weight
+    - encoder.W_i_bond.weight
+    - encoder.W_h_atom.weight
+    - encoder.W_h_0.weight, encoder.W_h_1.weight
+    - encoder.W_o.weight, encoder.W_o.bias
+    - encoder.gru.bias, encoder.gru.gru.*
+    - encoder.lr.weight
+
+    These need to be mapped to our model structure:
+    - encoder.encoder.W_i_atom.weight (etc.)
+    """
+    if logger:
+        logger.info(f"Loading pretrained checkpoint from {checkpoint_path}")
+
+    # Load checkpoint
+    if cuda:
+        state = torch.load(checkpoint_path)
+    else:
+        state = torch.load(checkpoint_path, map_location='cpu')
+
+    # Handle different checkpoint formats
+    if isinstance(state, dict):
+        if 'state_dict' in state:
+            loaded_state_dict = state['state_dict']
+        elif 'model_state_dict' in state:
+            loaded_state_dict = state['model_state_dict']
+        elif 'model' in state:
+            loaded_state_dict = state['model']
+        else:
+            # Check if it's a direct state dict
+            first_key = list(state.keys())[0] if state else None
+            if first_key and isinstance(state[first_key], torch.Tensor):
+                loaded_state_dict = state
+            else:
+                loaded_state_dict = state
+    else:
+        loaded_state_dict = state
+
+    # Get model state dict
+    model_state_dict = model.state_dict()
+
+    if logger:
+        logger.info(f"  Checkpoint parameters: {len(loaded_state_dict)}")
+        logger.info(f"  Model parameters: {len(model_state_dict)}")
+
+    # Match and load parameters
+    pretrained_dict = {}
+    matched_keys = []
+    skipped_keys = []
+
+    for ckpt_key, ckpt_val in loaded_state_dict.items():
+        matched = False
+
+        # Try different key mapping strategies
+        possible_model_keys = [
+            ckpt_key,  # Direct match
+            f"encoder.{ckpt_key}",  # Add encoder prefix
+            ckpt_key.replace("module.", ""),  # Remove DataParallel prefix
+        ]
+
+        for model_key in possible_model_keys:
+            if model_key in model_state_dict:
+                if ckpt_val.shape == model_state_dict[model_key].shape:
+                    pretrained_dict[model_key] = ckpt_val
+                    matched_keys.append(f"{ckpt_key} -> {model_key}")
+                    matched = True
+                    break
+                else:
+                    skipped_keys.append(f"{ckpt_key} (shape: {ckpt_val.shape} vs {model_state_dict[model_key].shape})")
+                    matched = True
+                    break
+
+        if not matched:
+            skipped_keys.append(ckpt_key)
+
+    if logger:
+        logger.info(f"  Matched {len(pretrained_dict)}/{len(loaded_state_dict)} parameters")
+        if matched_keys:
+            for mk in matched_keys[:5]:
+                logger.info(f"    [OK] {mk}")
+            if len(matched_keys) > 5:
+                logger.info(f"    ... and {len(matched_keys) - 5} more")
+        if skipped_keys:
+            logger.info(f"  Skipped {len(skipped_keys)} keys")
+
+    # Update model
+    model_state_dict.update(pretrained_dict)
+    model.load_state_dict(model_state_dict, strict=False)
+
+    return model
+
+
+# ==================== Data Loading ====================
+class ManualBatchLoader:
+    """Manual batch loader to avoid PyTorch DataLoader collate issues."""
+
+    def __init__(self, dataset: MoleculeDataset, batch_size: int, shuffle: bool = False, args=None):
+        self.dataset = dataset
+        self.batch_size = batch_size
+        self.shuffle = shuffle
+        self.args = args
+
+    def __iter__(self) -> Iterator:
+        indices = list(range(len(self.dataset)))
+        if self.shuffle:
+            random.shuffle(indices)
+
+        for i in range(0, len(indices), self.batch_size):
+            batch_indices = indices[i:i + self.batch_size]
+            batch_data = [self.dataset[j] for j in batch_indices]
+            yield ManualBatch(batch_data, self.args)
+
+    def __len__(self) -> int:
+        return (len(self.dataset) + self.batch_size - 1) // self.batch_size
+
+
+class ManualBatch:
+    """Batch data wrapper."""
+
+    def __init__(self, data_list: List[MoleculeDatapoint], args=None):
+        self.data_list = data_list
+        self.args = args
+
+    def smiles(self) -> List[str]:
+        return [d.smiles for d in self.data_list]
+
+    def features(self) -> Optional[List]:
+        if self.data_list[0].features is not None:
+            return [d.features for d in self.data_list]
+        return None
+
+    def targets(self) -> List:
+        return [d.targets for d in self.data_list]
+
+
+# ==================== Training Utilities ====================
+def set_seed(seed: int):
+    """Set random seed for reproducibility."""
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+
+
+class WarmupCosineScheduler:
+    """Learning rate scheduler with warmup and cosine decay."""
+
+    def __init__(self, optimizer, warmup_epochs: int, total_epochs: int, min_lr: float = 1e-7):
+        self.optimizer = optimizer
+        self.warmup_epochs = warmup_epochs
+        self.total_epochs = total_epochs
+        self.min_lr = min_lr
+        self.base_lrs = [group['lr'] for group in optimizer.param_groups]
+        self.current_epoch = 0
+
+    def step(self, epoch: Optional[int] = None):
+        if epoch is not None:
+            self.current_epoch = epoch
+        else:
+            self.current_epoch += 1
+
+        for param_group, base_lr in zip(self.optimizer.param_groups, self.base_lrs):
+            if self.current_epoch < self.warmup_epochs:
+                lr = base_lr * (self.current_epoch + 1) / self.warmup_epochs
+            else:
+                progress = (self.current_epoch - self.warmup_epochs) / max(1, self.total_epochs - self.warmup_epochs)
+                lr = self.min_lr + 0.5 * (base_lr - self.min_lr) * (1 + math.cos(math.pi * progress))
+            param_group['lr'] = lr
+
+    def get_lr(self) -> List[float]:
+        return [group['lr'] for group in self.optimizer.param_groups]
+
+
+class LabelSmoothingBCE(nn.Module):
+    """Binary cross entropy with label smoothing."""
+
+    def __init__(self, smoothing: float = 0.05):
+        super().__init__()
+        self.smoothing = smoothing
+
+    def forward(self, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        target_smooth = target * (1 - self.smoothing) + 0.5 * self.smoothing
+        return F.binary_cross_entropy_with_logits(pred, target_smooth, reduction='none')
+
+
+class EarlyStopping:
+    """Early stopping handler."""
+
+    def __init__(self, patience: int = 25, min_delta: float = 1e-4,
+                 mode: str = 'max', verbose: bool = True):
+        self.patience = patience
+        self.min_delta = min_delta
+        self.mode = mode
+        self.verbose = verbose
+        self.counter = 0
+        self.best_score = None
+        self.best_epoch = 0
+        self.best_state = None
+        self.early_stop = False
+
+    def __call__(self, score: float, model: nn.Module, epoch: int = 0) -> bool:
+        if self.best_score is None:
+            self.best_score = score
+            self.best_epoch = epoch
+            self._save(model)
+            if self.verbose:
+                print(f'  [EarlyStopping] Initial: {score:.4f}')
+        elif self._is_better(score):
+            if self.verbose:
+                print(f'  [EarlyStopping] Improved: {self.best_score:.4f} -> {score:.4f}')
+            self.best_score = score
+            self.best_epoch = epoch
+            self._save(model)
+            self.counter = 0
+        else:
+            self.counter += 1
+            if self.verbose:
+                print(f'  [EarlyStopping] No improvement. {self.counter}/{self.patience}')
+            if self.counter >= self.patience:
+                self.early_stop = True
+        return self.early_stop
+
+    def _is_better(self, score: float) -> bool:
+        if self.mode == 'max':
+            return score > self.best_score + self.min_delta
+        return score < self.best_score - self.min_delta
+
+    def _save(self, model: nn.Module):
+        self.best_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
+
+    def load_best(self, model: nn.Module):
+        if self.best_state:
+            model.load_state_dict(self.best_state, strict=False)
+
+
+# ==================== Logger Setup ====================
+def setup_logger(exp_name: str, exp_id: str) -> logging.Logger:
+    """Setup logging to file and console."""
+    log_dir = f"dumped/{exp_name}"
+    os.makedirs(log_dir, exist_ok=True)
+
+    logger = logging.getLogger('KANO')
+    logger.setLevel(logging.INFO)
+    logger.handlers = []
+
+    # File handler with UTF-8 encoding
+    fh = logging.FileHandler(
+        f"{log_dir}/{exp_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log",
+        encoding='utf-8'
+    )
+    fh.setLevel(logging.INFO)
+
+    # Console handler
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.INFO)
+
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    fh.setFormatter(formatter)
+    ch.setFormatter(formatter)
+
+    logger.addHandler(fh)
+    logger.addHandler(ch)
+
+    return logger
+
+
+# ==================== Training Functions ====================
+def train_epoch(model, data_loader, loss_func, optimizer, args):
+    """Train for one epoch."""
+    model.train()
+    total_loss = 0
+    num_batches = 0
+
+    for batch in tqdm(data_loader, desc='Training', leave=False):
+        optimizer.zero_grad()
+
+        smiles_batch = batch.smiles()
+        features_batch = batch.features()
+        target_batch = batch.targets()
+
+        # Create mask for valid targets
+        mask = torch.Tensor([[x is not None for x in tb] for tb in target_batch])
+        targets = torch.Tensor([[0 if x is None else x for x in tb] for tb in target_batch])
+
+        if args.cuda:
+            mask, targets = mask.cuda(), targets.cuda()
+
+        # Forward pass
+        preds = model(smiles_batch, features_batch)
+
+        # Compute loss
+        loss = loss_func(preds, targets)
+        loss = (loss * mask).sum() / mask.sum()
+
+        if torch.isnan(loss) or torch.isinf(loss):
+            continue
+
+        # Backward pass
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+        optimizer.step()
+
+        total_loss += loss.item()
+        num_batches += 1
+
+    return total_loss / max(num_batches, 1)
+
+
+def evaluate_model(model, data_loader, num_tasks, metric_func, dataset_type, args):
+    """Evaluate model on data."""
+    model.eval()
+    preds = []
+    targets_list = []
+
+    with torch.no_grad():
+        for batch in data_loader:
+            smiles_batch = batch.smiles()
+            features_batch = batch.features()
+            target_batch = batch.targets()
+
+            batch_preds = model(smiles_batch, features_batch)
+            batch_preds = batch_preds.data.cpu().numpy()
+
+            if dataset_type == 'classification':
+                batch_preds = 1 / (1 + np.exp(-batch_preds))
+
+            preds.extend(batch_preds.tolist())
+            targets_list.extend(target_batch)
+
+    results = evaluate_predictions(
+        preds=preds,
+        targets=targets_list,
+        num_tasks=num_tasks,
+        metric_func=metric_func,
+        dataset_type=dataset_type
+    )
+
+    return results
+
+
+# ==================== Main Training Loop ====================
+def run_training(args, logger):
+    """Main training loop."""
+    # Setup device
+    if args.gpu is not None:
+        torch.cuda.set_device(args.gpu)
+    args.cuda = args.gpu is not None and torch.cuda.is_available()
+    device = torch.device(f'cuda:{args.gpu}' if args.cuda else 'cpu')
+
+    logger.info(f"Using device: {device}")
+    logger.info(f"Training step: {args.step}")
+
+    # Get task info
+    args.task_names = get_task_names(args.data_path)
+    args.num_tasks = len(args.task_names)
+    logger.info(f"Number of tasks: {args.num_tasks}")
+
+    all_test_scores = []
+
+    for run_idx in range(args.num_runs):
+        seed = args.seed + run_idx
+        set_seed(seed)
+
+        logger.info(f"\n{'='*60}")
+        logger.info(f"Run {run_idx + 1}/{args.num_runs}, Seed: {seed}")
+        logger.info(f"{'='*60}")
+
+        # Load data
+        logger.info("Loading data...")
+        data = get_data(path=args.data_path, args=args)
+
+        if args.separate_val_path:
+            val_data = get_data(path=args.separate_val_path, args=args)
+        if args.separate_test_path:
+            test_data = get_data(path=args.separate_test_path, args=args)
+
+        if args.separate_val_path and args.separate_test_path:
+            train_data = data
+        else:
+            train_data, val_data, test_data = split_data(
+                data=data,
+                split_type=args.split_type,
+                sizes=args.split_sizes,
+                seed=seed,
+                args=args
+            )
+
+        logger.info(f"Train: {len(train_data)}, Val: {len(val_data)}, Test: {len(test_data)}")
+
+        # Create data loaders
+        train_loader = ManualBatchLoader(train_data, args.batch_size, shuffle=True, args=args)
+        val_loader = ManualBatchLoader(val_data, args.batch_size, shuffle=False, args=args)
+        test_loader = ManualBatchLoader(test_data, args.batch_size, shuffle=False, args=args)
+
+        # Normalize features if needed
+        if args.features_scaling:
+            features_scaler = train_data.normalize_features(replace_nan_token=0)
+            val_data.normalize_features(features_scaler)
+            test_data.normalize_features(features_scaler)
+
+        args.features_size = train_data.features_size()
+
+        # Build model
+        logger.info("Building model...")
+        model = build_model(args)
+
+        # Load pretrained checkpoint
+        if args.checkpoint_path is not None:
+            model = load_pretrained_checkpoint(
+                model,
+                args.checkpoint_path,
+                cuda=args.cuda,
+                logger=logger
+            )
+
+        # Move to device
+        if args.cuda:
+            model = model.cuda()
+
+        logger.info(f"Model parameters: {param_count(model):,}")
+
+        # Setup optimizer and scheduler
+        optimizer = AdamW(model.parameters(), lr=args.init_lr, weight_decay=args.weight_decay)
+        scheduler = WarmupCosineScheduler(optimizer, warmup_epochs=args.warmup_epochs, total_epochs=args.epochs)
+
+        # Setup loss function
+        if args.dataset_type == 'classification':
+            loss_func = LabelSmoothingBCE(smoothing=args.label_smoothing)
+        else:
+            loss_func = nn.MSELoss(reduction='none')
+
+        # Setup metric
+        if args.metric == 'auc':
+            metric_func = roc_auc_score
+        elif args.metric == 'rmse':
+            metric_func = lambda y, p: math.sqrt(mean_squared_error(y, p))
+        elif args.metric == 'mae':
+            metric_func = mean_absolute_error
+        else:
+            metric_func = roc_auc_score
+
+        # Early stopping
+        early_stopping = EarlyStopping(
+            patience=args.patience,
+            mode='max' if args.dataset_type == 'classification' else 'min'
+        )
+
+        logger.info("Starting training...")
+
+        # Training loop
+        for epoch in range(args.epochs):
+            train_loss = train_epoch(model, train_loader, loss_func, optimizer, args)
+            scheduler.step()
+            current_lr = scheduler.get_lr()[0]
+
+            val_scores = evaluate_model(model, val_loader, args.num_tasks, metric_func, args.dataset_type, args)
+            val_score = np.nanmean(val_scores)
+
+            logger.info(
+                f"Epoch {epoch+1}/{args.epochs} | Loss: {train_loss:.4f} | "
+                f"Val {args.metric}: {val_score:.4f} | LR: {current_lr:.2e}"
+            )
+
+            if early_stopping(val_score, model, epoch):
+                logger.info(f"Early stopping at epoch {epoch+1}")
+                break
+
+        # Load best model and evaluate
+        early_stopping.load_best(model)
+
+        test_scores = evaluate_model(model, test_loader, args.num_tasks, metric_func, args.dataset_type, args)
+        test_score = np.nanmean(test_scores)
+        all_test_scores.append(test_score)
+
+        logger.info(f"Run {run_idx+1} - Test {args.metric}: {test_score:.4f}")
+
+        # Save model
+        if args.save_model_path:
+            save_dir = os.path.dirname(args.save_model_path)
+            if save_dir:
+                os.makedirs(save_dir, exist_ok=True)
+            save_path = args.save_model_path.replace('.pt', f'_run{run_idx+1}.pt')
+            torch.save(model.state_dict(), save_path)
+            logger.info(f"Model saved to {save_path}")
+
+    # Final results
+    logger.info("\n" + "=" * 60)
+    logger.info("FINAL RESULTS")
+    logger.info("=" * 60)
+    logger.info(f"Scores: {[f'{s:.4f}' for s in all_test_scores]}")
+    logger.info(f"Mean: {np.mean(all_test_scores):.4f} +/- {np.std(all_test_scores):.4f}")
+    logger.info("=" * 60)
+
+    return all_test_scores
+
+
+# ==================== Argument Parser ====================
+def parse_args():
+    parser = argparse.ArgumentParser(description='KANO Training')
+
+    # Data arguments
+    parser.add_argument('--data_path', type=str, required=True)
+    parser.add_argument('--dataset_type', type=str, default='classification',
+                        choices=['classification', 'regression'])
+    parser.add_argument('--split_type', type=str, default='random')
+    parser.add_argument('--split_sizes', type=float, nargs=3, default=[0.8, 0.1, 0.1])
+    parser.add_argument('--separate_val_path', type=str, default=None)
+    parser.add_argument('--separate_test_path', type=str, default=None)
+    parser.add_argument('--features_path', type=str, nargs='*', default=None)
+    parser.add_argument('--features_scaling', action='store_true', default=True)
+    parser.add_argument('--no_features_scaling', action='store_false', dest='features_scaling')
+    parser.add_argument('--max_data_size', type=int, default=None)
+    parser.add_argument('--smiles_column', type=str, default=None)
+    parser.add_argument('--target_columns', type=str, nargs='*', default=None)
+    parser.add_argument('--ignore_columns', type=str, nargs='*', default=None)
+    parser.add_argument('--use_compound_names', action='store_true', default=False)
+    parser.add_argument('--folds_file', type=str, default=None)
+    parser.add_argument('--val_fold_index', type=int, default=None)
+    parser.add_argument('--test_fold_index', type=int, default=None)
+    parser.add_argument('--crossval_index_dir', type=str, default=None)
+    parser.add_argument('--crossval_index_file', type=str, default=None)
+    parser.add_argument('--seed', type=int, default=42)
+    parser.add_argument('--num_folds', type=int, default=1)
+    parser.add_argument('--save_smiles_splits', action='store_true', default=False)
+
+    # Feature generator
+    parser.add_argument('--features_generator', type=str, nargs='*', default=None)
+    parser.add_argument('--no_features_generator', action='store_true', default=False)
+
+    # Model arguments
+    parser.add_argument('--hidden_size', type=int, default=300)
+    parser.add_argument('--depth', type=int, default=3)
+    parser.add_argument('--dropout', type=float, default=0.1)
+    parser.add_argument('--ffn_num_layers', type=int, default=2)
+    parser.add_argument('--activation', type=str, default='ReLU')
+    parser.add_argument('--bias', action='store_true', default=True)
+    parser.add_argument('--aggregation', type=str, default='mean')
+    parser.add_argument('--aggregation_norm', type=int, default=100)
+
+    # CMPN specific
+    parser.add_argument('--atom_messages', action='store_true', default=False)
+    parser.add_argument('--undirected', action='store_true', default=False)
+    parser.add_argument('--features_only', action='store_true', default=False)
+    parser.add_argument('--use_input_features', action='store_true', default=False)
+
+    # Training arguments
+    parser.add_argument('--gpu', type=int, default=None)
+    parser.add_argument('--init_lr', type=float, default=1e-4)
+    parser.add_argument('--warmup_epochs', type=int, default=2)
+    parser.add_argument('--weight_decay', type=float, default=1e-5)
+    parser.add_argument('--epochs', type=int, default=30)
+    parser.add_argument('--batch_size', type=int, default=50)
+    parser.add_argument('--num_runs', type=int, default=3)
+    parser.add_argument('--label_smoothing', type=float, default=0.0)
+    parser.add_argument('--patience', type=int, default=10)
+    parser.add_argument('--metric', type=str, default='auc', choices=['auc', 'rmse', 'mae'])
+
+    # Experiment arguments
+    parser.add_argument('--step', type=str, default='functional_prompt',
+                        choices=['pretrain', 'functional_prompt', 'finetune_add', 'finetune_concat'])
+    parser.add_argument('--exp_name', type=str, default='kano')
+    parser.add_argument('--exp_id', type=str, default='default')
+    parser.add_argument('--checkpoint_path', type=str, default=None)
+    parser.add_argument('--save_model_path', type=str, default=None)
+
+    return parser.parse_args()
+
+
+# ==================== Main ====================
+def main():
+    args = parse_args()
+    logger = setup_logger(args.exp_name, args.exp_id)
+
+    logger.info("=" * 60)
+    logger.info("KANO Training Configuration")
+    logger.info("=" * 60)
+    for arg, value in sorted(vars(args).items()):
+        logger.info(f"{arg}: {value}")
+    logger.info("=" * 60)
+
+    run_training(args, logger)
+
+
+if __name__ == "__main__":
     main()
