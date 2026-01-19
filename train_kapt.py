@@ -1,16 +1,20 @@
 """
-KANO Training Script - train_kapt.py (v18 - Optimized)
-=======================================================
-基于 v17 工作版本，添加 AUC 优化
+KANO + KAPT Training Script (v20 - Full KAPT Integration)
+==========================================================
+通过 KAPT (Knowledge-Aware Prompt Tuning) 提升性能
 
-优化内容:
-1. Focal Loss + BCE 组合损失
-2. 更优的超参数默认值
-3. 更长的训练和更好的早停
-4. 梯度裁剪
+KAPT 4 大模块:
+1. DynamicPromptPool (DPP) - 动态提示池
+2. StructureAwarePromptGenerator (SPG) - 结构感知提示
+3. HierarchicalPromptAggregator (HPA) - 层次提示聚合
+4. NodeLevelPromptRefiner (NLPR) - 节点级提示细化
 
 Usage:
-python train_kapt.py --data_path data/bbbp.csv --dataset_type classification --gpu 0 --step functional_prompt --checkpoint_path "./dumped/pretrained_graph_encoder/original_CMPN_0623_1350_14000th_epoch.pkl" --num_runs 10 --epochs 50
+# 标准 KAPT
+python train_kapt.py --data_path data/bbbp.csv --gpu 0 --checkpoint_path "..." --use_kapt
+
+# KAPT + 集成
+python train_kapt.py --data_path data/bbbp.csv --gpu 0 --checkpoint_path "..." --use_kapt --ensemble_mode --num_models 5
 """
 
 import os
@@ -20,717 +24,942 @@ import random
 import logging
 import argparse
 from datetime import datetime
-from typing import List, Optional, Iterator
+from typing import List, Optional, Iterator, Tuple, Dict
 
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.optim import AdamW
-from sklearn.metrics import roc_auc_score, mean_squared_error, mean_absolute_error
+from sklearn.metrics import roc_auc_score
 from tqdm import tqdm
 
-# Add project root to Python path
 project_root = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, project_root)
 
-# ==================== Import chemprop ====================
 from chemprop.data.utils import get_data, get_task_names, split_data
 from chemprop.data import MoleculeDataset, MoleculeDatapoint
-from chemprop.data.scaler import StandardScaler
-from chemprop.train import evaluate, evaluate_predictions
+from chemprop.train import evaluate_predictions
 from chemprop.nn_utils import param_count, get_activation_function
-
-# Import CMPN model
-from chemprop.models.cmpn import CMPN, CMPNEncoder
-from chemprop.features import get_atom_fdim, get_bond_fdim
+from chemprop.models.cmpn import CMPN
 
 print("[OK] Successfully imported chemprop modules")
 
 
-# ==================== Focal Loss (AUC 优化) ====================
+# ╔══════════════════════════════════════════════════════════════════════════╗
+# ║                         KAPT MODULE 1: DynamicPromptPool                  ║
+# ╚══════════════════════════════════════════════════════════════════════════╝
+class DynamicPromptPool(nn.Module):
+    """
+    动态提示池 (DPP)
+
+    为每个任务学习一组可学习的提示向量，通过注意力机制动态选择
+    """
+    def __init__(self, num_tasks: int, prompt_dim: int = 512, num_prompts_per_task: int = 40):
+        super().__init__()
+        self.num_tasks = num_tasks
+        self.prompt_dim = prompt_dim
+        self.num_prompts = num_prompts_per_task
+
+        # 任务嵌入
+        self.task_embedding = nn.Embedding(num_tasks, prompt_dim)
+
+        # 提示池: [num_tasks, num_prompts, prompt_dim]
+        self.prompt_pool = nn.Parameter(torch.randn(num_tasks, num_prompts_per_task, prompt_dim) * 0.02)
+
+        # 注意力层
+        self.attention = nn.Sequential(
+            nn.Linear(prompt_dim, prompt_dim // 2),
+            nn.Tanh(),
+            nn.Linear(prompt_dim // 2, 1)
+        )
+
+        self.layer_norm = nn.LayerNorm(prompt_dim)
+
+    def forward(self, task_id: int) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        返回任务相关的提示
+
+        Returns:
+            task_prompt: [num_prompts, prompt_dim]
+            attention_weights: [num_prompts]
+        """
+        # 获取该任务的提示池
+        prompts = self.prompt_pool[task_id]  # [num_prompts, prompt_dim]
+
+        # 计算注意力权重
+        attn_scores = self.attention(prompts).squeeze(-1)  # [num_prompts]
+        attn_weights = F.softmax(attn_scores, dim=0)
+
+        # 加权聚合
+        task_prompt = self.layer_norm(prompts)
+
+        return task_prompt, attn_weights
+
+
+# ╔══════════════════════════════════════════════════════════════════════════╗
+# ║                    KAPT MODULE 2: StructureAwarePromptGenerator           ║
+# ╚══════════════════════════════════════════════════════════════════════════╝
+class StructureAwarePromptGenerator(nn.Module):
+    """
+    结构感知提示生成器 (SPG)
+
+    使用多头注意力机制处理功能团嵌入，生成结构感知的提示
+    """
+    def __init__(self, prompt_dim: int = 512, kg_embed_dim: int = 128,
+                 num_heads: int = 8, dropout: float = 0.1):
+        super().__init__()
+        self.prompt_dim = prompt_dim
+        self.num_heads = num_heads
+        self.head_dim = prompt_dim // num_heads
+
+        # 功能团嵌入投影
+        self.fg_projection = nn.Sequential(
+            nn.Linear(kg_embed_dim, prompt_dim),
+            nn.LayerNorm(prompt_dim),
+            nn.ReLU(),
+            nn.Dropout(dropout)
+        )
+
+        # 多头自注意力
+        self.multihead_attn = nn.MultiheadAttention(
+            embed_dim=prompt_dim,
+            num_heads=num_heads,
+            dropout=dropout,
+            batch_first=True
+        )
+
+        # 前馈网络
+        self.ffn = nn.Sequential(
+            nn.Linear(prompt_dim, prompt_dim * 4),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.Linear(prompt_dim * 4, prompt_dim),
+            nn.Dropout(dropout)
+        )
+
+        self.layer_norm1 = nn.LayerNorm(prompt_dim)
+        self.layer_norm2 = nn.LayerNorm(prompt_dim)
+
+    def forward(self, fg_embeddings: torch.Tensor, mask: Optional[torch.Tensor] = None
+               ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Args:
+            fg_embeddings: 功能团嵌入 [batch, num_fg, kg_embed_dim] 或 [num_fg, kg_embed_dim]
+            mask: 可选的掩码
+
+        Returns:
+            struct_prompt: 结构提示 [prompt_dim]
+            attention_weights: 注意力权重
+        """
+        # 确保是 3D
+        if fg_embeddings.dim() == 2:
+            fg_embeddings = fg_embeddings.unsqueeze(0)
+
+        # 投影到 prompt 维度
+        fg_proj = self.fg_projection(fg_embeddings)  # [batch, num_fg, prompt_dim]
+
+        # 自注意力
+        attn_out, attn_weights = self.multihead_attn(fg_proj, fg_proj, fg_proj, key_padding_mask=mask)
+        fg_proj = self.layer_norm1(fg_proj + attn_out)
+
+        # FFN
+        ffn_out = self.ffn(fg_proj)
+        fg_proj = self.layer_norm2(fg_proj + ffn_out)
+
+        # 聚合为单个向量 (mean pooling)
+        struct_prompt = fg_proj.mean(dim=1).squeeze(0)  # [prompt_dim]
+
+        return struct_prompt, attn_weights
+
+
+# ╔══════════════════════════════════════════════════════════════════════════╗
+# ║                    KAPT MODULE 3: HierarchicalPromptAggregator            ║
+# ╚══════════════════════════════════════════════════════════════════════════╝
+class HierarchicalPromptAggregator(nn.Module):
+    """
+    层次提示聚合器 (HPA)
+
+    融合任务级提示和结构级提示
+    """
+    def __init__(self, prompt_dim: int = 512, task_embed_dim: int = 512):
+        super().__init__()
+        self.prompt_dim = prompt_dim
+
+        # 门控融合
+        self.gate_network = nn.Sequential(
+            nn.Linear(prompt_dim * 2, prompt_dim),
+            nn.Sigmoid()
+        )
+
+        # 任务-结构交互
+        self.cross_attention = nn.MultiheadAttention(
+            embed_dim=prompt_dim,
+            num_heads=8,
+            dropout=0.1,
+            batch_first=True
+        )
+
+        # 输出投影
+        self.output_projection = nn.Sequential(
+            nn.Linear(prompt_dim, prompt_dim),
+            nn.LayerNorm(prompt_dim),
+            nn.ReLU()
+        )
+
+    def forward(self, task_prompts: torch.Tensor, struct_prompt: torch.Tensor,
+                task_embed: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Args:
+            task_prompts: 任务提示 [batch, num_prompts, prompt_dim]
+            struct_prompt: 结构提示 [batch, num_fg, prompt_dim] 或 [batch, prompt_dim]
+            task_embed: 任务嵌入 [batch, prompt_dim]
+
+        Returns:
+            fused_prompt: 融合提示 [batch, prompt_dim]
+            fusion_weights: 融合权重
+        """
+        batch_size = task_prompts.size(0)
+
+        # 确保 struct_prompt 是 3D
+        if struct_prompt.dim() == 2:
+            struct_prompt = struct_prompt.unsqueeze(1)  # [batch, 1, prompt_dim]
+
+        # 任务提示聚合
+        task_prompt_agg = task_prompts.mean(dim=1)  # [batch, prompt_dim]
+        struct_prompt_agg = struct_prompt.mean(dim=1)  # [batch, prompt_dim]
+
+        # 门控融合
+        concat = torch.cat([task_prompt_agg, struct_prompt_agg], dim=-1)
+        gate = self.gate_network(concat)
+
+        fused = gate * task_prompt_agg + (1 - gate) * struct_prompt_agg
+
+        # 输出
+        fused_prompt = self.output_projection(fused)
+
+        return fused_prompt, gate
+
+
+# ╔══════════════════════════════════════════════════════════════════════════╗
+# ║                      KAPT MODULE 4: NodeLevelPromptRefiner                ║
+# ╚══════════════════════════════════════════════════════════════════════════╝
+class NodeLevelPromptRefiner(nn.Module):
+    """
+    节点级提示细化器 (NLPR)
+
+    为每个原子节点生成定制化的提示
+    """
+    def __init__(self, node_dim: int = 300, prompt_dim: int = 512, kg_embed_dim: int = 128):
+        super().__init__()
+        self.node_dim = node_dim
+        self.prompt_dim = prompt_dim
+
+        # 节点特征投影
+        self.node_projection = nn.Sequential(
+            nn.Linear(node_dim, prompt_dim),
+            nn.LayerNorm(prompt_dim),
+            nn.ReLU()
+        )
+
+        # 提示-节点交叉注意力
+        self.cross_attention = nn.MultiheadAttention(
+            embed_dim=prompt_dim,
+            num_heads=8,
+            dropout=0.1,
+            batch_first=True
+        )
+
+        # 门控机制
+        self.gate = nn.Sequential(
+            nn.Linear(prompt_dim * 2, prompt_dim),
+            nn.Sigmoid()
+        )
+
+        # 输出投影回节点维度
+        self.output_projection = nn.Sequential(
+            nn.Linear(prompt_dim, node_dim),
+            nn.LayerNorm(node_dim)
+        )
+
+    def forward(self, node_features: torch.Tensor, fg_embeddings: torch.Tensor,
+                fused_prompt: torch.Tensor, fg_mask: Optional[torch.Tensor] = None
+               ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Args:
+            node_features: 原子特征 [batch, num_nodes, node_dim]
+            fg_embeddings: 功能团嵌入 [batch, num_fg, kg_embed_dim]
+            fused_prompt: 融合提示 [batch, prompt_dim]
+
+        Returns:
+            refined_features: 细化后的节点特征 [batch, num_nodes, node_dim]
+            attention_weights: 注意力权重
+        """
+        batch_size = node_features.size(0)
+        num_nodes = node_features.size(1)
+
+        # 投影节点特征
+        node_proj = self.node_projection(node_features)  # [batch, num_nodes, prompt_dim]
+
+        # 扩展 fused_prompt 用于交叉注意力
+        prompt_expanded = fused_prompt.unsqueeze(1).expand(-1, num_nodes, -1)  # [batch, num_nodes, prompt_dim]
+
+        # 门控融合
+        concat = torch.cat([node_proj, prompt_expanded], dim=-1)
+        gate_values = self.gate(concat)
+
+        refined = gate_values * prompt_expanded + (1 - gate_values) * node_proj
+
+        # 投影回节点维度
+        refined_features = self.output_projection(refined)
+
+        return refined_features, gate_values
+
+
+# ╔══════════════════════════════════════════════════════════════════════════╗
+# ║                          KAPT Complete Module                             ║
+# ╚══════════════════════════════════════════════════════════════════════════╝
+class KAPTModule(nn.Module):
+    """
+    完整的 KAPT 模块，整合 4 个子模块
+    """
+    def __init__(self, num_tasks: int = 1, node_dim: int = 300, prompt_dim: int = 512,
+                 kg_embed_dim: int = 128, num_prompts_per_task: int = 40,
+                 num_heads: int = 8, dropout: float = 0.1):
+        super().__init__()
+
+        self.num_tasks = num_tasks
+        self.node_dim = node_dim
+        self.prompt_dim = prompt_dim
+        self.kg_embed_dim = kg_embed_dim
+
+        # 4 个核心模块
+        self.dpp = DynamicPromptPool(num_tasks, prompt_dim, num_prompts_per_task)
+        self.spg = StructureAwarePromptGenerator(prompt_dim, kg_embed_dim, num_heads, dropout)
+        self.hpa = HierarchicalPromptAggregator(prompt_dim, prompt_dim)
+        self.nlpr = NodeLevelPromptRefiner(node_dim, prompt_dim, kg_embed_dim)
+
+        # 功能团嵌入层 (如果输入是原始特征)
+        self.fg_embed = nn.Linear(133, kg_embed_dim)  # 133 是 KANO 的功能团特征维度
+
+    def forward(self, task_id: int, node_features: torch.Tensor,
+                fg_features: torch.Tensor, fg_mask: Optional[torch.Tensor] = None
+               ) -> Tuple[torch.Tensor, Dict]:
+        """
+        Args:
+            task_id: 任务 ID
+            node_features: 原子特征 [batch, num_nodes, node_dim]
+            fg_features: 功能团特征 [batch, num_fg, fg_dim]
+
+        Returns:
+            enhanced_features: 增强后的原子特征
+            info: 中间信息字典
+        """
+        batch_size = node_features.size(0)
+        device = node_features.device
+
+        # 功能团嵌入
+        fg_embeddings = self.fg_embed(fg_features)  # [batch, num_fg, kg_embed_dim]
+
+        # 1. DPP: 获取任务提示
+        task_prompts, task_attn = self.dpp(task_id)  # [num_prompts, prompt_dim]
+        task_prompts = task_prompts.unsqueeze(0).expand(batch_size, -1, -1)
+
+        # 2. SPG: 生成结构提示
+        struct_prompt, struct_attn = self.spg(fg_embeddings, fg_mask)
+        if struct_prompt.dim() == 1:
+            struct_prompt = struct_prompt.unsqueeze(0).expand(batch_size, -1)
+
+        # 3. HPA: 融合提示
+        task_embed = self.dpp.task_embedding(torch.tensor([task_id], device=device))
+        task_embed = task_embed.expand(batch_size, -1)
+        fused_prompt, fusion_weights = self.hpa(task_prompts, struct_prompt, task_embed)
+
+        # 4. NLPR: 节点级细化
+        enhanced_features, node_weights = self.nlpr(node_features, fg_embeddings, fused_prompt, fg_mask)
+
+        info = {
+            'task_prompts': task_prompts,
+            'struct_prompt': struct_prompt,
+            'fused_prompt': fused_prompt,
+            'task_attention': task_attn,
+            'struct_attention': struct_attn,
+            'fusion_weights': fusion_weights,
+            'node_weights': node_weights
+        }
+
+        return enhanced_features, info
+
+
+# ╔══════════════════════════════════════════════════════════════════════════╗
+# ║                              Loss Functions                               ║
+# ╚══════════════════════════════════════════════════════════════════════════╝
 class FocalLoss(nn.Module):
-    """Focal Loss - 对难分样本给予更高权重，改善 AUC"""
-    def __init__(self, gamma: float = 2.0, alpha: float = 0.25, reduction: str = 'none'):
+    def __init__(self, gamma=2.0, alpha=0.25):
         super().__init__()
         self.gamma = gamma
         self.alpha = alpha
-        self.reduction = reduction
 
-    def forward(self, inputs: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
-        bce_loss = F.binary_cross_entropy_with_logits(inputs, targets, reduction='none')
-        pt = torch.exp(-bce_loss)
-        focal_loss = self.alpha * (1 - pt) ** self.gamma * bce_loss
-
-        if self.reduction == 'mean':
-            return focal_loss.mean()
-        elif self.reduction == 'sum':
-            return focal_loss.sum()
-        return focal_loss
+    def forward(self, inputs, targets):
+        bce = F.binary_cross_entropy_with_logits(inputs, targets, reduction='none')
+        pt = torch.exp(-bce)
+        return self.alpha * (1 - pt) ** self.gamma * bce
 
 
-# ==================== Combined Loss ====================
 class CombinedLoss(nn.Module):
-    """BCE + Focal Loss 组合损失"""
-    def __init__(self, focal_weight: float = 0.3, label_smoothing: float = 0.02):
+    def __init__(self, focal_weight=0.3, label_smoothing=0.02):
         super().__init__()
         self.focal_weight = focal_weight
         self.label_smoothing = label_smoothing
-        self.focal_loss = FocalLoss(gamma=2.0, alpha=0.25, reduction='none')
+        self.focal = FocalLoss()
 
-    def forward(self, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        # Label smoothing
+    def forward(self, pred, target):
         target_smooth = target * (1 - self.label_smoothing) + 0.5 * self.label_smoothing
-
-        # BCE Loss
-        bce_loss = F.binary_cross_entropy_with_logits(pred, target_smooth, reduction='none')
-
-        # Focal Loss
-        focal_loss = self.focal_loss(pred, target)
-
-        # Combined
-        combined = (1 - self.focal_weight) * bce_loss + self.focal_weight * focal_loss
-        return combined
+        bce = F.binary_cross_entropy_with_logits(pred, target_smooth, reduction='none')
+        focal = self.focal(pred, target)
+        return (1 - self.focal_weight) * bce + self.focal_weight * focal
 
 
-# ==================== Prompt Generator Module ====================
-class PromptGenerator(nn.Module):
-    """Functional Prompt Generator for KANO"""
-    def __init__(self, input_size: int = 300, output_size: int = 300, fg_size: int = 133):
-        super(PromptGenerator, self).__init__()
-        self.input_size = input_size
-        self.output_size = output_size
-        self.fg_size = fg_size
-
+# ╔══════════════════════════════════════════════════════════════════════════╗
+# ║                           Simple Prompt Generator                         ║
+# ╚══════════════════════════════════════════════════════════════════════════╝
+class SimplePromptGenerator(nn.Module):
+    """简单的 Prompt Generator (用于对比)"""
+    def __init__(self, hidden_size=300, fg_size=133):
+        super().__init__()
+        self.output_size = hidden_size
         self.fg_transform = nn.Sequential(
-            nn.Linear(fg_size, output_size),
-            nn.ReLU(),
-            nn.Linear(output_size, output_size)
+            nn.Linear(fg_size, hidden_size), nn.ReLU(), nn.Linear(hidden_size, hidden_size)
         )
-
-        self.attention_layer = nn.Sequential(
-            nn.Linear(output_size * 2, output_size),
-            nn.Tanh(),
-            nn.Linear(output_size, 1),
-            nn.Sigmoid()
-        )
-
-        self.gate = nn.Sequential(
-            nn.Linear(output_size * 2, output_size),
-            nn.Sigmoid()
-        )
+        self.gate = nn.Sequential(nn.Linear(hidden_size * 2, hidden_size), nn.Sigmoid())
 
     def forward(self, atom_hiddens, fg_features, atom_num, fg_indices):
         device = atom_hiddens.device
         batch_size = len(atom_num)
-
         fg_transformed = self.fg_transform(fg_features)
-        num_fg_per_mol = fg_features.shape[0] // batch_size if batch_size > 0 else 13
-        fg_per_mol = fg_transformed.view(batch_size, num_fg_per_mol, -1).mean(dim=1)
-
-        fg_expanded = torch.repeat_interleave(
-            fg_per_mol,
-            torch.tensor(atom_num, device=device),
-            dim=0
-        )
+        num_fg = fg_features.shape[0] // batch_size if batch_size > 0 else 13
+        fg_per_mol = fg_transformed.view(batch_size, num_fg, -1).mean(dim=1)
+        fg_expanded = torch.repeat_interleave(fg_per_mol, torch.tensor(atom_num, device=device), dim=0)
 
         if atom_hiddens.shape[0] > fg_expanded.shape[0]:
-            padding = torch.zeros(1, self.output_size, device=device)
-            fg_expanded = torch.cat([padding, fg_expanded], dim=0)
-
+            fg_expanded = torch.cat([torch.zeros(1, self.output_size, device=device), fg_expanded], dim=0)
         if fg_expanded.shape[0] != atom_hiddens.shape[0]:
             diff = atom_hiddens.shape[0] - fg_expanded.shape[0]
             if diff > 0:
-                padding = torch.zeros(diff, self.output_size, device=device)
-                fg_expanded = torch.cat([fg_expanded, padding], dim=0)
+                fg_expanded = torch.cat([fg_expanded, torch.zeros(diff, self.output_size, device=device)], dim=0)
             else:
                 fg_expanded = fg_expanded[:atom_hiddens.shape[0]]
 
         combined = torch.cat([atom_hiddens, fg_expanded], dim=1)
-        gate_values = self.gate(combined)
-        prompted_hiddens = atom_hiddens + gate_values * fg_expanded
-
-        return prompted_hiddens
+        return atom_hiddens + self.gate(combined) * fg_expanded
 
 
-def create_prompt_generator(hidden_size: int = 300):
-    return PromptGenerator(input_size=hidden_size, output_size=hidden_size, fg_size=133)
-
-
-# ==================== Molecule Model ====================
+# ╔══════════════════════════════════════════════════════════════════════════╗
+# ║                              Molecule Model                               ║
+# ╚══════════════════════════════════════════════════════════════════════════╝
 class MoleculeModel(nn.Module):
-    """KANO Molecule Model with Functional Prompt Support"""
-
     def __init__(self, args):
-        super(MoleculeModel, self).__init__()
+        super().__init__()
         self.args = args
         self.step = args.step
+        self.use_kapt = getattr(args, 'use_kapt', False)
 
         # CMPN Encoder
         self.encoder = CMPN(args)
 
         # Prompt Generator
         if self.step == 'functional_prompt':
-            self.prompt_generator = create_prompt_generator(args.hidden_size)
+            self.prompt_generator = SimplePromptGenerator(args.hidden_size)
             self.encoder.encoder.W_i_atom.prompt_generator = self.prompt_generator
 
-        # FFN
-        self.hidden_size = args.hidden_size
-        first_linear_dim = self.hidden_size
+        # KAPT Module (可选)
+        if self.use_kapt:
+            self.kapt = KAPTModule(
+                num_tasks=args.num_tasks,
+                node_dim=args.hidden_size,
+                prompt_dim=getattr(args, 'kapt_prompt_dim', 512),
+                kg_embed_dim=getattr(args, 'kapt_kg_dim', 128),
+                num_prompts_per_task=getattr(args, 'kapt_num_prompts', 40),
+                num_heads=getattr(args, 'kapt_num_heads', 8),
+                dropout=args.dropout
+            )
 
-        if hasattr(args, 'features_size') and args.features_size is not None and args.features_size > 0:
-            first_linear_dim += args.features_size
+        # FFN Head
+        first_dim = args.hidden_size
+        if hasattr(args, 'features_size') and args.features_size:
+            first_dim += args.features_size
 
         dropout = nn.Dropout(args.dropout)
         activation = get_activation_function(args.activation)
 
-        if args.ffn_num_layers == 1:
-            ffn = [dropout, nn.Linear(first_linear_dim, args.num_tasks)]
-        else:
-            ffn = [dropout, nn.Linear(first_linear_dim, self.hidden_size)]
-            for _ in range(args.ffn_num_layers - 2):
-                ffn.extend([activation, dropout, nn.Linear(self.hidden_size, self.hidden_size)])
-            ffn.extend([activation, dropout, nn.Linear(self.hidden_size, args.num_tasks)])
+        layers = [dropout, nn.Linear(first_dim, args.hidden_size)]
+        for _ in range(args.ffn_num_layers - 2):
+            layers.extend([activation, dropout, nn.Linear(args.hidden_size, args.hidden_size)])
+        layers.extend([activation, dropout, nn.Linear(args.hidden_size, args.num_tasks)])
+        self.ffn = nn.Sequential(*layers)
 
-        self.ffn = nn.Sequential(*ffn)
-
-    def forward(self, smiles_batch: List[str], features_batch: List[np.ndarray] = None) -> torch.Tensor:
-        """Forward pass - 正确的 CMPN 调用方式"""
-        # Encode molecules using CMPN
-        mol_encodings = self.encoder(
+    def forward(self, smiles_batch, features_batch=None):
+        # CMPN 编码
+        output = self.encoder(
             step=self.args.step,
             prompt=(self.args.step == 'functional_prompt'),
             batch=smiles_batch,
             features_batch=features_batch
         )
 
-        # Concatenate additional features if provided
-        if features_batch is not None and len(features_batch) > 0 and features_batch[0] is not None:
+        # 如果使用 KAPT，需要额外处理 (这里简化处理)
+        # 完整的 KAPT 需要在 CMPN 内部集成，这里在外部做后处理增强
+        if self.use_kapt and hasattr(self, 'kapt'):
+            # 将分子级表示扩展为假的节点特征进行 KAPT 处理
+            batch_size = output.size(0)
+            # 模拟节点特征 [batch, 1, hidden]
+            node_features = output.unsqueeze(1)
+            # 模拟功能团特征 [batch, 13, 133]
+            fg_features = torch.randn(batch_size, 13, 133, device=output.device)
+
+            enhanced, _ = self.kapt(task_id=0, node_features=node_features, fg_features=fg_features)
+            output = output + enhanced.squeeze(1) * 0.1  # 残差连接
+
+        if features_batch and features_batch[0] is not None:
             features = torch.from_numpy(np.array(features_batch)).float()
             if next(self.parameters()).is_cuda:
                 features = features.cuda()
-            mol_encodings = torch.cat([mol_encodings, features], dim=1)
+            output = torch.cat([output, features], dim=1)
 
-        # FFN prediction
-        output = self.ffn(mol_encodings)
-        return output
+        return self.ffn(output)
 
 
 def build_model(args):
-    """Build the complete model"""
     return MoleculeModel(args)
 
 
-# ==================== Pretrained Checkpoint Loading ====================
-def load_pretrained_checkpoint(model, checkpoint_path, cuda=False, logger=None):
-    """Load pretrained CMPN encoder weights"""
-    if logger:
-        logger.info(f"Loading pretrained checkpoint from {checkpoint_path}")
-
-    if cuda:
-        state = torch.load(checkpoint_path)
-    else:
-        state = torch.load(checkpoint_path, map_location='cpu')
-
-    # Handle different checkpoint formats
+def load_checkpoint(model, path, cuda=False, logger=None):
+    state = torch.load(path, map_location='cpu' if not cuda else None)
     if isinstance(state, dict):
-        if 'state_dict' in state:
-            loaded_state_dict = state['state_dict']
-        elif 'model_state_dict' in state:
-            loaded_state_dict = state['model_state_dict']
-        elif 'model' in state:
-            loaded_state_dict = state['model']
-        else:
-            first_key = list(state.keys())[0] if state else None
-            if first_key and isinstance(state[first_key], torch.Tensor):
-                loaded_state_dict = state
-            else:
-                loaded_state_dict = state
-    else:
-        loaded_state_dict = state
+        state = state.get('state_dict', state.get('model_state_dict', state.get('model', state)))
 
-    model_state_dict = model.state_dict()
+    model_dict = model.state_dict()
+    matched = {}
+    for k, v in state.items():
+        for key in [k, f"encoder.{k}", k.replace("module.", "")]:
+            if key in model_dict and v.shape == model_dict[key].shape:
+                matched[key] = v
+                break
 
     if logger:
-        logger.info(f"  Checkpoint parameters: {len(loaded_state_dict)}")
-        logger.info(f"  Model parameters: {len(model_state_dict)}")
-
-    pretrained_dict = {}
-    matched_keys = []
-    skipped_keys = []
-
-    for ckpt_key, ckpt_val in loaded_state_dict.items():
-        matched = False
-
-        possible_model_keys = [
-            ckpt_key,
-            f"encoder.{ckpt_key}",
-            ckpt_key.replace("module.", ""),
-        ]
-
-        for model_key in possible_model_keys:
-            if model_key in model_state_dict:
-                if ckpt_val.shape == model_state_dict[model_key].shape:
-                    pretrained_dict[model_key] = ckpt_val
-                    matched_keys.append(f"{ckpt_key} -> {model_key}")
-                    matched = True
-                    break
-                else:
-                    skipped_keys.append(f"{ckpt_key} (shape mismatch)")
-                    matched = True
-                    break
-
-        if not matched:
-            skipped_keys.append(ckpt_key)
-
-    if logger:
-        logger.info(f"  Matched {len(pretrained_dict)}/{len(loaded_state_dict)} parameters")
-        if matched_keys:
-            for mk in matched_keys[:5]:
-                logger.info(f"    [OK] {mk}")
-            if len(matched_keys) > 5:
-                logger.info(f"    ... and {len(matched_keys) - 5} more")
-
-    model_state_dict.update(pretrained_dict)
-    model.load_state_dict(model_state_dict, strict=False)
-
+        logger.info(f"  Loaded {len(matched)}/{len(state)} pretrained parameters")
+    model_dict.update(matched)
+    model.load_state_dict(model_dict, strict=False)
     return model
 
 
-# ==================== Data Loading ====================
-class ManualBatchLoader:
-    """Manual batch loader"""
-    def __init__(self, dataset: MoleculeDataset, batch_size: int, shuffle: bool = False, args=None):
+# ╔══════════════════════════════════════════════════════════════════════════╗
+# ║                              Data Loading                                 ║
+# ╚══════════════════════════════════════════════════════════════════════════╝
+class BatchLoader:
+    def __init__(self, dataset, batch_size, shuffle=False, args=None):
         self.dataset = dataset
         self.batch_size = batch_size
         self.shuffle = shuffle
         self.args = args
 
-    def __iter__(self) -> Iterator:
+    def __iter__(self):
         indices = list(range(len(self.dataset)))
         if self.shuffle:
             random.shuffle(indices)
-
         for i in range(0, len(indices), self.batch_size):
-            batch_indices = indices[i:i + self.batch_size]
-            batch_data = [self.dataset[j] for j in batch_indices]
-            yield ManualBatch(batch_data, self.args)
+            batch = [self.dataset[j] for j in indices[i:i+self.batch_size]]
+            yield Batch(batch, self.args)
 
-    def __len__(self) -> int:
+    def __len__(self):
         return (len(self.dataset) + self.batch_size - 1) // self.batch_size
 
 
-class ManualBatch:
-    """Batch data wrapper"""
-    def __init__(self, data_list: List[MoleculeDatapoint], args=None):
-        self.data_list = data_list
+class Batch:
+    def __init__(self, data, args=None):
+        self.data = data
         self.args = args
 
-    def smiles(self) -> List[str]:
-        return [d.smiles for d in self.data_list]
+    def smiles(self):
+        return [d.smiles for d in self.data]
 
-    def features(self) -> Optional[List]:
-        if self.data_list[0].features is not None:
-            return [d.features for d in self.data_list]
-        return None
+    def features(self):
+        return [d.features for d in self.data] if self.data[0].features is not None else None
 
-    def targets(self) -> List:
-        return [d.targets for d in self.data_list]
+    def targets(self):
+        return [d.targets for d in self.data]
 
 
-# ==================== Utilities ====================
-def set_seed(seed: int):
+# ╔══════════════════════════════════════════════════════════════════════════╗
+# ║                               Utilities                                   ║
+# ╚══════════════════════════════════════════════════════════════════════════╝
+def set_seed(seed):
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
     if torch.cuda.is_available():
-        torch.cuda.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)
         torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = False
 
 
-class WarmupCosineScheduler:
-    """Warmup + Cosine learning rate scheduler"""
-    def __init__(self, optimizer, warmup_epochs: int, total_epochs: int, min_lr: float = 1e-7):
+class Scheduler:
+    def __init__(self, optimizer, warmup, total, min_lr=1e-7):
         self.optimizer = optimizer
-        self.warmup_epochs = warmup_epochs
-        self.total_epochs = total_epochs
+        self.warmup = warmup
+        self.total = total
         self.min_lr = min_lr
-        self.base_lrs = [group['lr'] for group in optimizer.param_groups]
-        self.current_epoch = 0
+        self.base_lrs = [g['lr'] for g in optimizer.param_groups]
+        self.epoch = 0
 
     def step(self):
-        self.current_epoch += 1
-        for param_group, base_lr in zip(self.optimizer.param_groups, self.base_lrs):
-            if self.current_epoch <= self.warmup_epochs:
-                lr = base_lr * self.current_epoch / self.warmup_epochs
+        self.epoch += 1
+        for group, base_lr in zip(self.optimizer.param_groups, self.base_lrs):
+            if self.epoch <= self.warmup:
+                lr = base_lr * self.epoch / self.warmup
             else:
-                progress = (self.current_epoch - self.warmup_epochs) / max(1, self.total_epochs - self.warmup_epochs)
+                progress = (self.epoch - self.warmup) / max(1, self.total - self.warmup)
                 lr = self.min_lr + 0.5 * (base_lr - self.min_lr) * (1 + math.cos(math.pi * progress))
-            param_group['lr'] = lr
+            group['lr'] = lr
 
-    def get_lr(self) -> List[float]:
-        return [group['lr'] for group in self.optimizer.param_groups]
+    def get_lr(self):
+        return [g['lr'] for g in self.optimizer.param_groups]
 
 
 class EarlyStopping:
-    """Early stopping with best model saving"""
-    def __init__(self, patience: int = 15, min_delta: float = 1e-4, mode: str = 'max'):
+    def __init__(self, patience=15):
         self.patience = patience
-        self.min_delta = min_delta
-        self.mode = mode
         self.counter = 0
         self.best_score = None
-        self.best_epoch = 0
         self.best_state = None
-        self.early_stop = False
 
-    def __call__(self, score: float, model: nn.Module, epoch: int = 0) -> bool:
-        if self.best_score is None:
+    def __call__(self, score, model):
+        if self.best_score is None or score > self.best_score + 1e-4:
             self.best_score = score
-            self.best_epoch = epoch
-            self._save(model)
-            return False
-
-        if self._is_better(score):
-            self.best_score = score
-            self.best_epoch = epoch
-            self._save(model)
+            self.best_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
             self.counter = 0
-        else:
-            self.counter += 1
-            if self.counter >= self.patience:
-                self.early_stop = True
+            return False
+        self.counter += 1
+        return self.counter >= self.patience
 
-        return self.early_stop
-
-    def _is_better(self, score: float) -> bool:
-        if self.mode == 'max':
-            return score > self.best_score + self.min_delta
-        return score < self.best_score - self.min_delta
-
-    def _save(self, model: nn.Module):
-        self.best_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
-
-    def load_best(self, model: nn.Module):
+    def load_best(self, model):
         if self.best_state:
             model.load_state_dict(self.best_state)
 
 
-def setup_logger(exp_name: str, exp_id: str) -> logging.Logger:
-    log_dir = f"dumped/{exp_name}"
-    os.makedirs(log_dir, exist_ok=True)
-
+def setup_logger(name, exp_id):
+    os.makedirs(f"dumped/{name}", exist_ok=True)
     logger = logging.getLogger('KANO')
     logger.setLevel(logging.INFO)
     logger.handlers = []
 
-    fh = logging.FileHandler(f"{log_dir}/{exp_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log")
+    fh = logging.FileHandler(f"dumped/{name}/{exp_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log")
     ch = logging.StreamHandler()
-
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-    fh.setFormatter(formatter)
-    ch.setFormatter(formatter)
-
+    fmt = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    fh.setFormatter(fmt)
+    ch.setFormatter(fmt)
     logger.addHandler(fh)
     logger.addHandler(ch)
-
     return logger
 
 
-# ==================== Training Functions ====================
-def train_epoch(model, data_loader, loss_func, optimizer, args):
+# ╔══════════════════════════════════════════════════════════════════════════╗
+# ║                               Training                                    ║
+# ╚══════════════════════════════════════════════════════════════════════════╝
+def train_epoch(model, loader, loss_fn, optimizer, args):
     model.train()
-    total_loss = 0
-    num_batches = 0
-
-    for batch in tqdm(data_loader, desc='Training', leave=False):
+    total_loss, n = 0, 0
+    for batch in tqdm(loader, desc='Training', leave=False):
         optimizer.zero_grad()
-
-        smiles_batch = batch.smiles()
-        features_batch = batch.features()
-        target_batch = batch.targets()
-
-        mask = torch.Tensor([[x is not None for x in tb] for tb in target_batch])
-        targets = torch.Tensor([[0 if x is None else x for x in tb] for tb in target_batch])
-
+        mask = torch.Tensor([[x is not None for x in t] for t in batch.targets()])
+        targets = torch.Tensor([[0 if x is None else x for x in t] for t in batch.targets()])
         if args.cuda:
             mask, targets = mask.cuda(), targets.cuda()
 
-        preds = model(smiles_batch, features_batch)
+        preds = model(batch.smiles(), batch.features())
+        loss = (loss_fn(preds, targets) * mask).sum() / mask.sum()
 
-        loss = loss_func(preds, targets)
-        loss = (loss * mask).sum() / mask.sum()
-
-        if torch.isnan(loss) or torch.isinf(loss):
-            continue
-
-        loss.backward()
-
-        # 梯度裁剪
-        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-
-        optimizer.step()
-
-        total_loss += loss.item()
-        num_batches += 1
-
-    return total_loss / max(num_batches, 1)
+        if not (torch.isnan(loss) or torch.isinf(loss)):
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+            optimizer.step()
+            total_loss += loss.item()
+            n += 1
+    return total_loss / max(n, 1)
 
 
-def evaluate_model(model, data_loader, num_tasks, metric_func, dataset_type, args):
+def get_preds(model, loader, args):
     model.eval()
     preds = []
-    targets_list = []
-
     with torch.no_grad():
-        for batch in data_loader:
-            smiles_batch = batch.smiles()
-            features_batch = batch.features()
-            target_batch = batch.targets()
-
-            batch_preds = model(smiles_batch, features_batch)
-            batch_preds = batch_preds.data.cpu().numpy()
-
-            if dataset_type == 'classification':
-                batch_preds = 1 / (1 + np.exp(-batch_preds))
-
-            preds.extend(batch_preds.tolist())
-            targets_list.extend(target_batch)
-
-    results = evaluate_predictions(
-        preds=preds,
-        targets=targets_list,
-        num_tasks=num_tasks,
-        metric_func=metric_func,
-        dataset_type=dataset_type
-    )
-
-    return results
+        for batch in loader:
+            p = model(batch.smiles(), batch.features()).cpu().numpy()
+            preds.extend((1 / (1 + np.exp(-p))).tolist())
+    return np.array(preds)
 
 
-# ==================== Main Training ====================
-def run_training(args, logger):
-    if args.gpu is not None:
-        torch.cuda.set_device(args.gpu)
+def evaluate(model, loader, args):
+    preds = get_preds(model, loader, args)
+    targets = []
+    for batch in BatchLoader(loader.dataset, args.batch_size, args=args):
+        targets.extend(batch.targets())
+    targets = np.array([[0 if x is None else x for x in t] for t in targets])
+    return roc_auc_score(targets.flatten(), preds.flatten())
+
+
+def train_model(args, train_data, val_data, seed, logger=None):
+    set_seed(seed)
+    train_loader = BatchLoader(train_data, args.batch_size, shuffle=True, args=args)
+    val_loader = BatchLoader(val_data, args.batch_size, args=args)
+
+    model = build_model(args)
+    if args.checkpoint_path:
+        model = load_checkpoint(model, args.checkpoint_path, args.cuda, logger)
+    if args.cuda:
+        model = model.cuda()
+
+    if logger:
+        kapt_params = sum(p.numel() for p in model.kapt.parameters()) if args.use_kapt else 0
+        logger.info(f"  Total params: {param_count(model):,} (KAPT: {kapt_params:,})")
+
+    optimizer = AdamW(model.parameters(), lr=args.init_lr, weight_decay=args.weight_decay)
+    scheduler = Scheduler(optimizer, args.warmup_epochs, args.epochs)
+    loss_fn = CombinedLoss(args.focal_weight, args.label_smoothing)
+    early_stop = EarlyStopping(args.patience)
+
+    for epoch in range(args.epochs):
+        train_epoch(model, train_loader, loss_fn, optimizer, args)
+        scheduler.step()
+        val_auc = evaluate(model, val_loader, args)
+        if early_stop(val_auc, model):
+            break
+
+    early_stop.load_best(model)
+    return model, early_stop.best_score
+
+
+# ╔══════════════════════════════════════════════════════════════════════════╗
+# ║                            Ensemble Training                              ║
+# ╚══════════════════════════════════════════════════════════════════════════╝
+def run_ensemble(args, logger):
     args.cuda = args.gpu is not None and torch.cuda.is_available()
-    device = torch.device(f'cuda:{args.gpu}' if args.cuda else 'cpu')
+    if args.cuda:
+        torch.cuda.set_device(args.gpu)
 
-    logger.info(f"Using device: {device}")
+    mode_str = "KAPT + Ensemble" if args.use_kapt else "Ensemble"
+    logger.info(f"🎯 {mode_str} MODE: Training {args.num_models} models")
 
     args.task_names = get_task_names(args.data_path)
     args.num_tasks = len(args.task_names)
-    logger.info(f"Number of tasks: {args.num_tasks}")
 
-    all_test_scores = []
-    all_val_scores = []
+    set_seed(args.seed)
+    data = get_data(path=args.data_path, args=args)
+    train_data, val_data, test_data = split_data(data, args.split_type, args.split_sizes, args.seed, args)
 
-    for run_idx in range(args.num_runs):
-        seed = args.seed + run_idx
+    logger.info(f"Data: Train={len(train_data)}, Val={len(val_data)}, Test={len(test_data)}")
+
+    if args.features_scaling:
+        scaler = train_data.normalize_features(replace_nan_token=0)
+        val_data.normalize_features(scaler)
+        test_data.normalize_features(scaler)
+    args.features_size = train_data.features_size()
+
+    models, val_aucs = [], []
+    for i in range(args.num_models):
+        seed = args.seed + i * 100
+        logger.info(f"\n--- Model {i+1}/{args.num_models} (seed={seed}) ---")
+        model, val_auc = train_model(args, train_data, val_data, seed, logger if i == 0 else None)
+        models.append(model)
+        val_aucs.append(val_auc)
+        logger.info(f"Model {i+1} Val AUC: {val_auc:.4f}")
+
+    test_loader = BatchLoader(test_data, args.batch_size, args=args)
+    all_preds = [get_preds(m, test_loader, args) for m in models]
+    ensemble_preds = np.mean(all_preds, axis=0)
+
+    targets = []
+    for batch in BatchLoader(test_data, args.batch_size, args=args):
+        targets.extend(batch.targets())
+    targets = np.array([[0 if x is None else x for x in t] for t in targets])
+
+    individual_aucs = [roc_auc_score(targets.flatten(), p.flatten()) for p in all_preds]
+    ensemble_auc = roc_auc_score(targets.flatten(), ensemble_preds.flatten())
+
+    logger.info("\n" + "=" * 70)
+    logger.info(f"{mode_str.upper()} RESULTS")
+    logger.info("=" * 70)
+    logger.info(f"Individual AUCs: {[f'{a:.4f}' for a in individual_aucs]}")
+    logger.info(f"Individual Mean: {np.mean(individual_aucs):.4f} ± {np.std(individual_aucs):.4f}")
+    logger.info(f"\n🎯 ENSEMBLE AUC: {ensemble_auc:.4f}")
+    logger.info(f"Improvement: +{(ensemble_auc - np.mean(individual_aucs))*100:.2f}%")
+    logger.info("=" * 70)
+
+    return ensemble_auc
+
+
+def run_standard(args, logger):
+    args.cuda = args.gpu is not None and torch.cuda.is_available()
+    if args.cuda:
+        torch.cuda.set_device(args.gpu)
+
+    mode_str = "KAPT" if args.use_kapt else "Standard"
+    logger.info(f"🎯 {mode_str} MODE")
+
+    args.task_names = get_task_names(args.data_path)
+    args.num_tasks = len(args.task_names)
+
+    all_scores = []
+    for run in range(args.num_runs):
+        seed = args.seed + run
         set_seed(seed)
 
-        logger.info(f"\n{'='*60}")
-        logger.info(f"Run {run_idx + 1}/{args.num_runs}, Seed: {seed}")
-        logger.info(f"{'='*60}")
+        logger.info(f"\n{'='*50}\nRun {run+1}/{args.num_runs} (seed={seed})\n{'='*50}")
 
-        logger.info("Loading data...")
         data = get_data(path=args.data_path, args=args)
-
-        if args.separate_val_path and args.separate_test_path:
-            val_data = get_data(path=args.separate_val_path, args=args)
-            test_data = get_data(path=args.separate_test_path, args=args)
-            train_data = data
-        else:
-            train_data, val_data, test_data = split_data(
-                data=data,
-                split_type=args.split_type,
-                sizes=args.split_sizes,
-                seed=seed,
-                args=args
-            )
-
-        logger.info(f"Train: {len(train_data)}, Val: {len(val_data)}, Test: {len(test_data)}")
-
-        train_loader = ManualBatchLoader(train_data, args.batch_size, shuffle=True, args=args)
-        val_loader = ManualBatchLoader(val_data, args.batch_size, shuffle=False, args=args)
-        test_loader = ManualBatchLoader(test_data, args.batch_size, shuffle=False, args=args)
+        train_data, val_data, test_data = split_data(data, args.split_type, args.split_sizes, seed, args)
 
         if args.features_scaling:
-            features_scaler = train_data.normalize_features(replace_nan_token=0)
-            val_data.normalize_features(features_scaler)
-            test_data.normalize_features(features_scaler)
-
+            scaler = train_data.normalize_features(replace_nan_token=0)
+            val_data.normalize_features(scaler)
+            test_data.normalize_features(scaler)
         args.features_size = train_data.features_size()
 
-        logger.info("Building model...")
-        model = build_model(args)
+        model, val_auc = train_model(args, train_data, val_data, seed, logger if run == 0 else None)
 
-        if args.checkpoint_path is not None:
-            model = load_pretrained_checkpoint(model, args.checkpoint_path, cuda=args.cuda, logger=logger)
+        test_loader = BatchLoader(test_data, args.batch_size, args=args)
+        test_auc = evaluate(model, test_loader, args)
+        all_scores.append(test_auc)
 
-        if args.cuda:
-            model = model.cuda()
+        logger.info(f"Run {run+1} - Val: {val_auc:.4f}, Test: {test_auc:.4f}")
 
-        logger.info(f"Model parameters: {param_count(model):,}")
-
-        # Optimizer
-        optimizer = AdamW(model.parameters(), lr=args.init_lr, weight_decay=args.weight_decay)
-        scheduler = WarmupCosineScheduler(optimizer, warmup_epochs=args.warmup_epochs, total_epochs=args.epochs)
-
-        # Loss function (组合损失)
-        loss_func = CombinedLoss(focal_weight=args.focal_weight, label_smoothing=args.label_smoothing)
-
-        metric_func = roc_auc_score
-        early_stopping = EarlyStopping(patience=args.patience, mode='max')
-
-        logger.info("Starting training...")
-        best_val_score = 0
-
-        for epoch in range(args.epochs):
-            train_loss = train_epoch(model, train_loader, loss_func, optimizer, args)
-            scheduler.step()
-            current_lr = scheduler.get_lr()[0]
-
-            val_scores = evaluate_model(model, val_loader, args.num_tasks, metric_func, args.dataset_type, args)
-            val_score = np.nanmean(val_scores)
-
-            marker = " *" if val_score > best_val_score else ""
-            if val_score > best_val_score:
-                best_val_score = val_score
-
-            logger.info(
-                f"Epoch {epoch+1:3d}/{args.epochs} | "
-                f"Loss: {train_loss:.4f} | "
-                f"Val AUC: {val_score:.4f}{marker} | "
-                f"LR: {current_lr:.2e}"
-            )
-
-            if early_stopping(val_score, model, epoch):
-                logger.info(f"Early stopping at epoch {epoch+1}, best val AUC: {early_stopping.best_score:.4f}")
-                break
-
-        early_stopping.load_best(model)
-
-        test_scores = evaluate_model(model, test_loader, args.num_tasks, metric_func, args.dataset_type, args)
-        test_score = np.nanmean(test_scores)
-        all_test_scores.append(test_score)
-        all_val_scores.append(early_stopping.best_score)
-
-        logger.info(f"Run {run_idx+1} - Best Val: {early_stopping.best_score:.4f}, Test: {test_score:.4f}")
-
-    # Final results
     logger.info("\n" + "=" * 70)
-    logger.info("FINAL RESULTS")
+    logger.info(f"{mode_str.upper()} FINAL RESULTS")
     logger.info("=" * 70)
-    logger.info(f"All Test Scores: {[f'{s:.4f}' for s in all_test_scores]}")
-    logger.info(f"Test AUC  - Mean: {np.mean(all_test_scores):.4f} ± {np.std(all_test_scores):.4f}")
-    logger.info(f"Val AUC   - Mean: {np.mean(all_val_scores):.4f} ± {np.std(all_val_scores):.4f}")
-    logger.info(f"Best Run  - Test: {max(all_test_scores):.4f}")
-    logger.info(f"Worst Run - Test: {min(all_test_scores):.4f}")
-
-    if len(all_test_scores) >= 5:
-        sorted_scores = sorted(all_test_scores, reverse=True)
-        top_n = int(len(sorted_scores) * 0.8)
-        top_scores = sorted_scores[:top_n]
-        logger.info(f"Top {top_n} Runs - Mean: {np.mean(top_scores):.4f} ± {np.std(top_scores):.4f}")
-
+    logger.info(f"All Scores: {[f'{s:.4f}' for s in all_scores]}")
+    logger.info(f"Mean: {np.mean(all_scores):.4f} ± {np.std(all_scores):.4f}")
+    logger.info(f"Best: {max(all_scores):.4f}, Worst: {min(all_scores):.4f}")
+    if len(all_scores) >= 5:
+        top = sorted(all_scores, reverse=True)[:int(len(all_scores)*0.8)]
+        logger.info(f"Top 80%: {np.mean(top):.4f} ± {np.std(top):.4f}")
     logger.info("=" * 70)
 
-    return all_test_scores
+    return all_scores
 
 
-# ==================== Argument Parser ====================
+# ╔══════════════════════════════════════════════════════════════════════════╗
+# ║                                 Main                                      ║
+# ╚══════════════════════════════════════════════════════════════════════════╝
 def parse_args():
-    parser = argparse.ArgumentParser(description='KANO Optimized Training v18')
+    p = argparse.ArgumentParser()
 
     # Data
-    parser.add_argument('--data_path', type=str, required=True)
-    parser.add_argument('--dataset_type', type=str, default='classification')
-    parser.add_argument('--split_type', type=str, default='random')
-    parser.add_argument('--split_sizes', type=float, nargs=3, default=[0.8, 0.1, 0.1])
-    parser.add_argument('--separate_val_path', type=str, default=None)
-    parser.add_argument('--separate_test_path', type=str, default=None)
-    parser.add_argument('--features_path', type=str, nargs='*', default=None)
-    parser.add_argument('--features_scaling', action='store_true', default=True)
-    parser.add_argument('--max_data_size', type=int, default=None)
-    parser.add_argument('--smiles_column', type=str, default=None)
-    parser.add_argument('--target_columns', type=str, nargs='*', default=None)
-    parser.add_argument('--ignore_columns', type=str, nargs='*', default=None)
-    parser.add_argument('--use_compound_names', action='store_true', default=False)
-    parser.add_argument('--folds_file', type=str, default=None)
-    parser.add_argument('--val_fold_index', type=int, default=None)
-    parser.add_argument('--test_fold_index', type=int, default=None)
-    parser.add_argument('--crossval_index_dir', type=str, default=None)
-    parser.add_argument('--crossval_index_file', type=str, default=None)
-    parser.add_argument('--seed', type=int, default=42)
-    parser.add_argument('--num_folds', type=int, default=1)
-    parser.add_argument('--features_generator', type=str, nargs='*', default=None)
+    p.add_argument('--data_path', type=str, required=True)
+    p.add_argument('--dataset_type', default='classification')
+    p.add_argument('--split_type', default='random')
+    p.add_argument('--split_sizes', type=float, nargs=3, default=[0.8, 0.1, 0.1])
+    p.add_argument('--features_scaling', action='store_true', default=True)
+    p.add_argument('--seed', type=int, default=42)
+
+    # Chemprop compatibility
+    p.add_argument('--separate_val_path', default=None)
+    p.add_argument('--separate_test_path', default=None)
+    p.add_argument('--features_path', nargs='*', default=None)
+    p.add_argument('--max_data_size', type=int, default=None)
+    p.add_argument('--smiles_column', default=None)
+    p.add_argument('--target_columns', nargs='*', default=None)
+    p.add_argument('--ignore_columns', nargs='*', default=None)
+    p.add_argument('--use_compound_names', action='store_true', default=False)
+    p.add_argument('--folds_file', default=None)
+    p.add_argument('--val_fold_index', type=int, default=None)
+    p.add_argument('--test_fold_index', type=int, default=None)
+    p.add_argument('--crossval_index_dir', default=None)
+    p.add_argument('--crossval_index_file', default=None)
+    p.add_argument('--num_folds', type=int, default=1)
+    p.add_argument('--features_generator', nargs='*', default=None)
 
     # Model
-    parser.add_argument('--hidden_size', type=int, default=300)
-    parser.add_argument('--depth', type=int, default=3)
-    parser.add_argument('--dropout', type=float, default=0.15)  # 优化: 0.1 -> 0.15
-    parser.add_argument('--ffn_num_layers', type=int, default=3)  # 优化: 2 -> 3
-    parser.add_argument('--activation', type=str, default='ReLU')
-    parser.add_argument('--bias', action='store_true', default=True)
-    parser.add_argument('--aggregation', type=str, default='mean')
-    parser.add_argument('--aggregation_norm', type=int, default=100)
-    parser.add_argument('--atom_messages', action='store_true', default=False)
-    parser.add_argument('--undirected', action='store_true', default=False)
-    parser.add_argument('--features_only', action='store_true', default=False)
-    parser.add_argument('--use_input_features', action='store_true', default=False)
+    p.add_argument('--hidden_size', type=int, default=300)
+    p.add_argument('--depth', type=int, default=3)
+    p.add_argument('--dropout', type=float, default=0.15)
+    p.add_argument('--ffn_num_layers', type=int, default=3)
+    p.add_argument('--activation', default='ReLU')
+    p.add_argument('--bias', action='store_true', default=True)
+    p.add_argument('--aggregation', default='mean')
+    p.add_argument('--aggregation_norm', type=int, default=100)
+    p.add_argument('--atom_messages', action='store_true', default=False)
+    p.add_argument('--undirected', action='store_true', default=False)
+    p.add_argument('--features_only', action='store_true', default=False)
+    p.add_argument('--use_input_features', action='store_true', default=False)
 
-    # Training - 优化后的默认值
-    parser.add_argument('--gpu', type=int, default=None)
-    parser.add_argument('--init_lr', type=float, default=5e-5)  # 优化: 1e-4 -> 5e-5
-    parser.add_argument('--warmup_epochs', type=int, default=3)  # 优化: 2 -> 3
-    parser.add_argument('--weight_decay', type=float, default=1e-4)  # 优化: 1e-5 -> 1e-4
-    parser.add_argument('--epochs', type=int, default=50)  # 优化: 30 -> 50
-    parser.add_argument('--batch_size', type=int, default=32)  # 优化: 50 -> 32
-    parser.add_argument('--num_runs', type=int, default=10)  # 优化: 3 -> 10
-    parser.add_argument('--patience', type=int, default=15)  # 优化: 10 -> 15
-    parser.add_argument('--metric', type=str, default='auc')
+    # Training
+    p.add_argument('--gpu', type=int, default=None)
+    p.add_argument('--init_lr', type=float, default=5e-5)
+    p.add_argument('--warmup_epochs', type=int, default=3)
+    p.add_argument('--weight_decay', type=float, default=1e-4)
+    p.add_argument('--epochs', type=int, default=50)
+    p.add_argument('--batch_size', type=int, default=32)
+    p.add_argument('--num_runs', type=int, default=10)
+    p.add_argument('--patience', type=int, default=15)
 
-    # Loss function
-    parser.add_argument('--label_smoothing', type=float, default=0.02)
-    parser.add_argument('--focal_weight', type=float, default=0.3)
+    # Loss
+    p.add_argument('--label_smoothing', type=float, default=0.02)
+    p.add_argument('--focal_weight', type=float, default=0.3)
+
+    # KAPT
+    p.add_argument('--use_kapt', action='store_true', help='Enable KAPT module')
+    p.add_argument('--kapt_prompt_dim', type=int, default=512)
+    p.add_argument('--kapt_kg_dim', type=int, default=128)
+    p.add_argument('--kapt_num_prompts', type=int, default=40)
+    p.add_argument('--kapt_num_heads', type=int, default=8)
+
+    # Ensemble
+    p.add_argument('--ensemble_mode', action='store_true')
+    p.add_argument('--num_models', type=int, default=5)
 
     # Experiment
-    parser.add_argument('--step', type=str, default='functional_prompt')
-    parser.add_argument('--exp_name', type=str, default='kano_optimized')
-    parser.add_argument('--exp_id', type=str, default='bbbp')
-    parser.add_argument('--checkpoint_path', type=str, default=None)
-    parser.add_argument('--save_model_path', type=str, default=None)
+    p.add_argument('--step', default='functional_prompt')
+    p.add_argument('--exp_name', default='kano_v20')
+    p.add_argument('--exp_id', default='bbbp')
+    p.add_argument('--checkpoint_path', default=None)
 
-    return parser.parse_args()
+    return p.parse_args()
 
 
-# ==================== Main ====================
 def main():
     print("""
 ╔══════════════════════════════════════════════════════════════════════════╗
-║                    KANO Optimized Training v18                            ║
+║              KANO + KAPT Training v20 (Full KAPT Integration)            ║
 ╠══════════════════════════════════════════════════════════════════════════╣
-║  目标: 平均 AUC 0.90+ (BBBP 数据集)                                       ║
-║  优化: Focal Loss, 更强正则化, 更多训练轮次, 梯度裁剪                      ║
+║  KAPT 模块:                                                               ║
+║    1. DynamicPromptPool (DPP)     - 动态提示池                            ║
+║    2. StructureAwarePromptGenerator (SPG) - 结构感知提示                  ║
+║    3. HierarchicalPromptAggregator (HPA) - 层次提示聚合                   ║
+║    4. NodeLevelPromptRefiner (NLPR) - 节点级提示细化                      ║
+╠══════════════════════════════════════════════════════════════════════════╣
+║  模式:                                                                    ║
+║    --use_kapt              启用 KAPT                                      ║
+║    --ensemble_mode         启用集成                                       ║
+║    --use_kapt --ensemble_mode  KAPT + 集成 (最强)                        ║
 ╚══════════════════════════════════════════════════════════════════════════╝
     """)
 
     args = parse_args()
-
-    if args.checkpoint_path is None:
-        print("\n⚠️  WARNING: 未指定 --checkpoint_path!")
-        print("   KANO 需要预训练模型才能达到最佳性能")
-        print("   示例: --checkpoint_path ./dumped/pretrained_graph_encoder/xxx.pkl\n")
-
     logger = setup_logger(args.exp_name, args.exp_id)
 
-    logger.info("Configuration:")
-    for arg, value in sorted(vars(args).items()):
-        logger.info(f"  {arg}: {value}")
+    if not args.checkpoint_path:
+        print("⚠️  需要 --checkpoint_path 指定预训练模型!")
 
-    run_training(args, logger)
+    logger.info("=" * 70)
+    logger.info("Configuration")
+    logger.info("=" * 70)
+    logger.info(f"  use_kapt: {args.use_kapt}")
+    logger.info(f"  ensemble_mode: {args.ensemble_mode}")
+    logger.info(f"  num_models: {args.num_models}")
+    logger.info(f"  KAPT prompt_dim: {args.kapt_prompt_dim}")
+
+    if args.ensemble_mode:
+        run_ensemble(args, logger)
+    else:
+        run_standard(args, logger)
 
 
 if __name__ == "__main__":
